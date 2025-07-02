@@ -13,7 +13,7 @@ public class FabricEntrypoint implements ModInitializer {
     public void onInitialize() {
         ModTemplate.init();
         // sample_content
-        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamage, damageTaken, blocked) -> {
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamage, damageTaken, blocked) -> { // sample_content
             if (entity instanceof ServerPlayer && damageTaken > 0) { // sample_content
                 ExampleEventHandler.onPlayerHurt((ServerPlayer) entity); // sample_content
             } // sample_content
