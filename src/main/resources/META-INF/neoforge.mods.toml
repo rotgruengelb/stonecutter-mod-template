@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+license = "MIT"
+
+[[mods]]
+modId = "modtemplate"
+displayName = "Mod Template"
+version = "${version}"
+displayURL = ""
+logoFile = "assets/icon.png"
+authors = "A Mod Author"
+description = '''A Mod Description'''
+
+[[mixins]]
+config = "modtemplate.mixins.json"
+
+[[dependencies.modtemplate]]
+modId = "neoforge"
+type = "required"
+versionRange = "[1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.modtemplate]]
+modId = "minecraft"
+type = "required"

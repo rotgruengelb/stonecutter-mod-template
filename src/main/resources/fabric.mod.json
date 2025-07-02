@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "modtemplate",
+  "name": "Mod Template",
+  "version": "${version}",
+  "authors": ["A Mod Author"],
+  "contact": {
+    "sources": "",
+    "issues": ""
+  },
+  "description": "A Mod Description",
+  "icon": "assets/icon.png",
+  "license": "MIT",
+  "environment": "*",
+  "accessWidener": "modtemplate.accesswidener",
+  "entrypoints": {
+    "main": [
+      "dev.spagurder.modtemplate.fabric.FabricEntrypoint"
+    ],
+    "client": [
+      "dev.spagurder.modtemplate.fabric.FabricClientEntrypoint"
+    ],
+    "fabric-datagen": [
+      "dev.spagurder.modtemplate.fabric.datagen.FabricDataGeneratorEntrypoint"
+    ]
+  },
+  "mixins": [
+    "modtemplate.mixins.json"
+  ],
+  "depends": {
+    "fabric-api": "*"
+  }
+}
