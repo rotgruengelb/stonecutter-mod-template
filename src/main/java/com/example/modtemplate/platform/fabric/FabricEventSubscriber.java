@@ -1,17 +1,13 @@
-package dev.spagurder.modtemplate.fabric;
+package com.example.modtemplate.platform.fabric;
 
 //? fabric {
-import dev.spagurder.modtemplate.ExampleEventHandler; // sample_content
-import dev.spagurder.modtemplate.ModTemplate;
-import net.fabricmc.api.ModInitializer;
+import com.example.modtemplate.event.ExampleEventHandler; // sample_content
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents; // sample_content
 import net.minecraft.server.level.ServerPlayer; // sample_content
 
-public class FabricEntrypoint implements ModInitializer {
+public class FabricEventSubscriber {
 
-    @Override
-    public void onInitialize() {
-        ModTemplate.init();
+    public static void registerEvents() {
         // sample_content
         ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamage, damageTaken, blocked) -> { // sample_content
             if (entity instanceof ServerPlayer && damageTaken > 0) { // sample_content
@@ -19,6 +15,5 @@ public class FabricEntrypoint implements ModInitializer {
             } // sample_content
         }); // sample_content
     }
-
 }
 //?}

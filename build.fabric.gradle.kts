@@ -1,5 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
+import kotlin.text.replace
+
+
 plugins {
     id("fabric-loom")
     id("dev.kikugie.postprocess.jsonlang")
@@ -12,6 +15,13 @@ tasks.named<ProcessResources>("processResources") {
     val props = HashMap<String, String>().apply {
         this["version"] = prop("mod.version")
         this["minecraft"] = prop("deps.minecraft")
+        this["id"] = prop("mod.id")
+        this["name"] = prop("mod.name")
+        this["group"] = prop("mod.group")
+        this["authors"] = prop("mod.authors").replace(", ", "\", \"")
+        this["contributors"] = prop("mod.contributors").replace(", ", "\", \"")
+        this["license"] = prop("mod.license")
+        this["description"] = prop("mod.description")
     }
 
     filesMatching(listOf("fabric.mod.json", "META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
@@ -33,6 +43,16 @@ jsonlang {
 
 repositories {
     mavenLocal()
+    mavenCentral()
+    fun strictMaven(url: String, alias: String, vararg groups: String) = exclusiveContent {
+        forRepository { maven(url) { name = alias } }
+        filter { groups.forEach(::includeGroup) }
+    }
+    strictMaven("https://maven.rotgruengelb.net/releases", "Rotgruengelb Releases", "net.rotgruengelb")
+    strictMaven("https://maven.rotgruengelb.net/snapshots", "Rotgruengelb Snapshots", "net.rotgruengelb")
+    strictMaven("https://www.cursemaven.com", "CurseForge", "curse.maven")
+    strictMaven("https://api.modrinth.com/maven", "Modrinth", "maven.modrinth")
+    strictMaven("https://maven.terraformersmc.com/releases", "TerraformersMC", "com.terraformersmc")
 }
 
 dependencies {
@@ -44,6 +64,8 @@ dependencies {
     })
     modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric-loader")}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fabric-api")}")
+
+    modLocalRuntime("com.terraformersmc:modmenu:${property("deps.modmenu")}")
 
     val modules = listOf("transitive-access-wideners-v1", "registry-sync-v0", "resource-loader-v0")
     for (it in modules) modImplementation(fabricApi.module("fabric-$it", property("deps.fabric-api") as String))
@@ -67,6 +89,13 @@ tasks {
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
         dependsOn("build")
     }
+}
+
+stonecutter {
+    swaps["mod_version"] = "\"${property("mod.version")}\";"
+    swaps["mod_id"] = "\"${property("mod.id")}\";"
+    swaps["mod_name"] = "\"${property("mod.name")}\";"
+    swaps["mod_group"] = "\"${property("mod.group")}\";"
 }
 
 java {

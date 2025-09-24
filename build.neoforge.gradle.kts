@@ -10,6 +10,13 @@ tasks.named<ProcessResources>("processResources") {
     val props = HashMap<String, String>().apply {
         this["version"] = prop("mod.version")
         this["minecraft"] = prop("deps.minecraft")
+        this["id"] = prop("mod.id")
+        this["name"] = prop("mod.name")
+        this["group"] = prop("mod.group")
+        this["authors"] = prop("mod.authors")
+        this["contributors"] = prop("mod.contributors")
+        this["license"] = prop("mod.license")
+        this["description"] = prop("mod.description")
     }
 
     filesMatching(listOf("fabric.mod.json", "META-INF/neoforge.mods.toml", "META-INF/mods.toml")) {
@@ -69,6 +76,13 @@ tasks {
         into(rootProject.layout.buildDirectory.file("libs/${project.property("mod.version")}"))
         dependsOn("build")
     }
+}
+
+stonecutter {
+    swaps["mod_version"] = "\"${property("mod.version")}\";"
+    swaps["mod_id"] = "\"${property("mod.id")}\";"
+    swaps["mod_name"] = "\"${property("mod.name")}\";"
+    swaps["mod_group"] = "\"${property("mod.group")}\";"
 }
 
 java {

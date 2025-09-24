@@ -9,8 +9,7 @@ import shutil
 PACKAGE_PART_PATTERN = re.compile(r'^[a-z_][a-z0-9_]*$')
 
 
-def require_input(prompt: str, default_value: str = None,
-                  validator: Callable[[str], tuple[bool, str]] = None) -> str:
+def require_input(prompt: str, default_value: str = None, validator: Callable[[str], tuple[bool, str]] = None) -> str:
     while True:
         value = input(prompt).strip()
         if default_value and not value:
@@ -45,12 +44,11 @@ def package_name_validator(value: str) -> tuple[bool, str]:
     for part in parts:
         if not PACKAGE_PART_PATTERN.fullmatch(part):
             return False, (
-                f"Invalid package part: '{part}' — must start with a letter or underscore and contain only a-z, 0-9, or _"
-            )
+                f"Invalid package part: '{part}' — must start with a letter or underscore and contain only a-z, 0-9, or _")
     return True, ''
 
 
-def yeet_line(file_name, value):
+def remove_sample_content(file_name, value = "sample_content"):
     with open(file_name, 'r') as f:
         lines = f.readlines()
     with open(file_name, 'w') as f:
@@ -143,7 +141,7 @@ def rename_modtemplate_dirs(root: str, new_mod_id: str):
                 os.rename(src, dst)
 
 
-print("Spagurder's Mod Template Scaffolder")
+print("Rotgruengelb's Stonecutter Mod Template Scaffolder")
 print("Note: This script assumes certain files have not been modified. "
       "Running this on a fresh, unmodified template is recommended.")
 
@@ -155,14 +153,14 @@ mod_id = require_input(f"Mod ID [{mod_id}]: ", mod_id, mod_id_validator)
 print("This should be a valid Java class name. I do not validate this.")
 mod_class = input("Mod Class [ModTemplate]: ").strip() or 'ModTemplate'
 
-print("The mod group may also be updated. If you are not spagurder, please change this.")
-print("Note: Be careful not to include reserved keywords- I do not check for them!")
-mod_group = require_input(f"Mod Group: [dev.spagurder]: ", 'dev.spagurder', package_name_validator)
+print("The mod group should also be updated. If you are not rotgruengelb, please change this.")
+print("Note: Be careful not to include reserved keywords! They are not validated!")
+mod_group = require_input(f"Mod Group: [net.rotgruneglb]: ", 'net.rotgruneglb', package_name_validator)
 
-print("Who is you? I do not validate this at all. If you break the manifest files it's your fault.")
+print("Who is you? One entry only! More Authors can be added later in accordance to the loaders metadata format. Be careful with quotes and escaping.")
 mod_author = input("Mod Author []: ").strip()
 
-print("Ditto no validation.")
+print("The mod description. A short (1-3 sentence) decription of your mod. Not validated. Be careful with quotes and escaping.")
 mod_description = input("Mod Description []: ").strip()
 
 print("This template includes some sample content for testing/example purposes, including:")
@@ -173,16 +171,14 @@ remove_samples = require_input("Remove this sample content? (Y/n) [Y]: ", 'Y', c
 
 delete_script = require_input("Delete myself when done? (Y/n) [Y]: ", 'Y', confirm_validator).lower() == 'y'
 
-print(
-    f'Mod Name:        {mod_name}\n'
-    f'Mod ID:          {mod_id}\n'
-    f'Mod Class:       {mod_class}\n'
-    f'Mod Group:       {mod_group}\n'
-    f'Mod Author:      {mod_author}\n'
-    f'Mod Description: {mod_description}\n'
-    f'Remove Samples:  {remove_samples}\n'
-    f'Delete Myself:   {delete_script}'
-)
+print(f'Mod Name:        {mod_name}\n'
+      f'Mod ID:          {mod_id}\n'
+      f'Mod Class:       {mod_class}\n'
+      f'Mod Group:       {mod_group}\n'
+      f'Mod Author:      {mod_author}\n'
+      f'Mod Description: {mod_description}\n'
+      f'Remove Samples:  {remove_samples}\n'
+      f'Delete Script:   {delete_script}')
 confirm_settings = require_input("Proceed with these settings? (Y/n) [Y]: ", 'Y', confirm_validator).lower() == 'y'
 if not confirm_settings:
     print('Quitting.')
@@ -191,40 +187,39 @@ if not confirm_settings:
 if remove_samples:
     print("Removing samples...")
     # Mixins
-    os.remove('src/main/java/dev/spagurder/modtemplate/mixin/ExampleMixin.java')
-    yeet_line('src/main/resources/modtemplate.mixins.json', 'ExampleMixin')
+    os.remove('src/main/java/com/example/modtemplate/mixin/ExampleMixin.java')
+    remove_sample_content('src/main/resources/modtemplate.mixins.json', 'ExampleMixin')
     # Datagen
     shutil.rmtree('src/main/generated', ignore_errors=True)
-    os.remove('src/main/java/dev/spagurder/modtemplate/fabric/datagen/ModRecipeProvider.java')
-    yeet_line('src/main/java/dev/spagurder/modtemplate/fabric/datagen/FabricDataGeneratorEntrypoint.java', 'sample_content')
+    os.remove('src/main/java/com/example/modtemplate/fabric/datagen/ModRecipeProvider.java')
+    remove_sample_content('src/main/java/com/example/modtemplate/fabric/datagen/FabricDataGeneratorEntrypoint.java',
+              'sample_content')
     # Event/AWs/ATs
-    os.remove('src/main/java/dev/spagurder/modtemplate/ExampleEventHandler.java')
-    yeet_line('src/main/java/dev/spagurder/modtemplate/fabric/FabricEntrypoint.java', 'sample_content')
-    yeet_line('src/main/java/dev/spagurder/modtemplate/neoforge/NeoforgeEntrypoint.java', 'sample_content')
-    yeet_line('src/main/resources/modtemplate.accesswidener', 'sample_content')
-    yeet_line('src/main/resources/META-INF/accesstransformer.cfg', 'sample_content')
+    os.remove('src/main/java/com/example/modtemplate/ExampleEventHandler.java')
+    remove_sample_content('src/main/java/com/example/modtemplate/fabric/FabricEntrypoint.java', 'sample_content')
+    remove_sample_content('src/main/java/com/example/modtemplate/neoforge/NeoforgeEntrypoint.java', 'sample_content')
+    remove_sample_content('src/main/resources/modtemplate.accesswidener', 'sample_content')
+    remove_sample_content('src/main/resources/META-INF/accesstransformer.cfg', 'sample_content')
 
 if mod_class != 'ModTemplate':
     print('Renaming Mod Class File...')
-    os.rename('src/main/java/dev/spagurder/modtemplate/ModTemplate.java',
-              f'src/main/java/dev/spagurder/modtemplate/{mod_class}.java')
+    os.rename('src/main/java/com/example/modtemplate/ModTemplate.java',
+              f'src/main/java/com/example/modtemplate/{mod_class}.java')
 
 print('Renaming Resource Files...')
-os.rename('src/main/resources/modtemplate.accesswidener',
-          f'src/main/resources/{mod_id}.accesswidener')
-os.rename('src/main/resources/modtemplate.mixins.json',
-          f'src/main/resources/{mod_id}.mixins.json')
+os.rename('src/main/resources/modtemplate.accesswidener', f'src/main/resources/{mod_id}.accesswidener')
+os.rename('src/main/resources/modtemplate.mixins.json', f'src/main/resources/{mod_id}.mixins.json')
 
 print('Performing mass search and replace...')
 MassReplace.replace('.', 'ModTemplate', mod_class)
 MassReplace.replace('.', 'Mod Template', mod_name)
 MassReplace.replace('.', 'modtemplate', mod_id)
-MassReplace.replace('.', 'dev.spagurder', mod_group)
+MassReplace.replace('.', 'com.example', mod_group)
 MassReplace.replace('.', 'A Mod Author', mod_author)
 MassReplace.replace('.', 'A Mod Description', mod_description)
 
 print('Renaming directories/packages')
-move_package_group('src/main/java/', 'dev.spagurder', mod_group)
+move_package_group('src/main/java/', 'com.example', mod_group)
 rename_modtemplate_dirs('src/main/java/', mod_id)
 
 print("All done!")

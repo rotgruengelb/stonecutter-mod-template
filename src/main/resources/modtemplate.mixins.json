@@ -1,5 +1,5 @@
 {
-  "package": "dev.spagurder.modtemplate.mixin",
+  "package": "com.example.modtemplate.mixin",
   "required": true,
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_21",

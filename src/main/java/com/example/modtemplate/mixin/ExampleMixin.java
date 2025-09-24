@@ -1,6 +1,6 @@
-package dev.spagurder.modtemplate.mixin;
+package com.example.modtemplate.mixin;
 
-import dev.spagurder.modtemplate.ModTemplate;
+import com.example.modtemplate.ModTemplate;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +12,7 @@ public class ExampleMixin {
 
     @Inject(method = "loadLevel", at = @At("RETURN"))
     private void afterLoadLevel(CallbackInfo ci) {
-        ModTemplate.LOG.info("Level Loaded!");
+        ModTemplate.LOGGER.info("Level Loaded!");
     }
 
 }
