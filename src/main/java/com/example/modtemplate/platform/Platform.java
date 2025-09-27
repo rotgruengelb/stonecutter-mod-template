@@ -1,14 +1,11 @@
 package com.example.modtemplate.platform;
 
 public interface Platform {
-    boolean isModLoaded(String modId);
+	boolean isModLoaded(String modId);
 
-    ModLoader loader();
+	ModLoader loader();
 
-    enum ModLoader {
-        FABRIC,
-        NEOFORGE,
-        FORGE,
-        QUILT
-    }
+	enum ModLoader {
+		FABRIC, NEOFORGE, FORGE, QUILT
+	}
 }
