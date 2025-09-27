@@ -117,7 +117,7 @@ val additionalVersions: List<String> = additionalVersionsStr
     ?.filter { it.isNotEmpty() }
     ?: emptyList()
 val channelTag = property("mod.channel_tag") as String
-val releaseType: ReleaseType = ReleaseType.of(channelTag.split(".")[0].ifEmpty { "stable" })
+val releaseType: ReleaseType = ReleaseType.of(channelTag.split(".")[0].removePrefix("-").ifEmpty { "stable" })
 
 publishMods {
     file = tasks.remapJar.map { it.archiveFile.get() }
