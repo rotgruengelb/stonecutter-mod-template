@@ -1,3 +1,5 @@
+import me.modmuss50.mpp.ReleaseType
+
 plugins {
     id("net.neoforged.moddev")
     id ("dev.kikugie.postprocess.jsonlang")
@@ -24,7 +26,7 @@ tasks.named<ProcessResources>("processResources") {
     }
 }
 
-version = "${property("mod.version")}+${property("deps.minecraft")}-neoforge"
+version = "${property("mod.version")}${property("mod.channel_tag")}+${property("deps.minecraft")}-neoforge"
 base.archivesName = property("mod.id") as String
 
 jsonlang {
@@ -102,14 +104,16 @@ val additionalVersions: List<String> = additionalVersionsStr
     ?.map { it.trim() }
     ?.filter { it.isNotEmpty() }
     ?: emptyList()
+val channelTag = property("mod.channel_tag") as String
+val releaseType: ReleaseType = ReleaseType.of(channelTag.split(".")[0].ifEmpty { "stable" })
 
 publishMods {
     file = tasks.jar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.named<org.gradle.jvm.tasks.Jar>("sourcesJar").map { it.archiveFile.get() })
 
-    type = BETA
+    type = releaseType
     displayName = "${property("mod.name")} ${property("mod.version")} for ${stonecutter.current.version} Neoforge"
-    version = "${property("mod.version")}+${property("deps.minecraft")}-neoforge"
+    version = version
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add("neoforge")
 

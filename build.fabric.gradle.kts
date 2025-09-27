@@ -1,5 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
+import me.modmuss50.mpp.ReleaseType
 import kotlin.text.replace
 
 
@@ -29,7 +30,7 @@ tasks.named<ProcessResources>("processResources") {
     }
 }
 
-version = "${property("mod.version")}+${property("deps.minecraft")}-fabric"
+version = "${property("mod.version")}-${property("mod.channel_tag")}+${property("deps.minecraft")}-fabric"
 base.archivesName = property("mod.id") as String
 
 loom {
@@ -115,14 +116,16 @@ val additionalVersions: List<String> = additionalVersionsStr
     ?.map { it.trim() }
     ?.filter { it.isNotEmpty() }
     ?: emptyList()
+val channelTag = property("mod.channel_tag") as String
+val releaseType: ReleaseType = ReleaseType.of(channelTag.split(".")[0].ifEmpty { "stable" })
 
 publishMods {
     file = tasks.remapJar.map { it.archiveFile.get() }
     additionalFiles.from(tasks.remapSourcesJar.map { it.archiveFile.get() })
 
-    type = BETA
+    type = releaseType
     displayName = "${property("mod.name")} ${property("mod.version")} for ${stonecutter.current.version} Fabric"
-    version = "${property("mod.version")}+${property("deps.minecraft")}-fabric"
+    version = version
     changelog = provider { rootProject.file("CHANGELOG.md").readText() }
     modLoaders.add("fabric")
 
