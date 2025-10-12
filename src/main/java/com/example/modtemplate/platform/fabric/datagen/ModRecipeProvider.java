@@ -1,7 +1,7 @@
 package com.example.modtemplate.platform.fabric.datagen;
 
 //? fabric {
-
+/*
 import com.example.modtemplate.ModTemplate;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
@@ -38,4 +38,4 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 	}
 
 }
-//?}
+*///?}

@@ -48,3 +48,5 @@ bin/
 
 ### Jetbrains ###
 .idea/
+!.idea/icon.png
+!.idea/icon.svg

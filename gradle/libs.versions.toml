@@ -1,0 +1,29 @@
+[versions]
+# Plugin versions
+stonecutter = "0.8-alpha.4"
+stonecutter-postprocess = "2.1-beta.8"
+mod-publish = "0.8.0"
+dotenv-gradle = "4.0.0"
+fabric-loom = "1.11-SNAPSHOT"
+neoforge-moddev = "2.0.113"
+foojay = "1.0.0"
+fabric-loader= "0.16.14"
+
+[libraries]
+kikugie-postprocess = { module = "dev.kikugie:postprocess", version.ref = "stonecutter-postprocess" }
+mod-publish-plugin = { module = "me.modmuss50:mod-publish-plugin", version.ref = "mod-publish" }
+kikugie-stonecutter = { module = "dev.kikugie:stonecutter", version.ref = "stonecutter" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay" }
+
+[plugins]
+stonecutter = { id = "dev.kikugie.stonecutter", version.ref = "stonecutter" }
+dotenv = { id = "co.uzzu.dotenv.gradle", version.ref = "dotenv-gradle" }
+foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay" }
+
+fabric-loom = { id = "fabric-loom", version.ref = "fabric-loom" }
+neoforged-moddev = { id = "net.neoforged.moddev", version.ref = "neoforge-moddev" }
+jsonlang-postprocess = { id = "dev.kikugie.postprocess.jsonlang", version.ref = "stonecutter-postprocess" }
+mod-publish-plugin = { id = "me.modmuss50.mod-publish-plugin", version.ref = "mod-publish" }
+
+

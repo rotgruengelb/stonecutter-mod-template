@@ -1,25 +1,30 @@
 plugins {
-	id("dev.kikugie.stonecutter")
-	id("co.uzzu.dotenv.gradle") version "4.0.0"
-	id("fabric-loom") version "1.10-SNAPSHOT" apply false
-	id("net.neoforged.moddev") version "2.0.95" apply false
-	id("dev.kikugie.postprocess.jsonlang") version "2.1-beta.4" apply false
-	id("me.modmuss50.mod-publish-plugin") version "0.8.+" apply false
+	alias(libs.plugins.stonecutter)
+	alias(libs.plugins.dotenv)
+	alias(libs.plugins.fabric.loom).apply(false)
+	alias(libs.plugins.neoforged.moddev).apply(false)
+	alias(libs.plugins.jsonlang.postprocess).apply(false)
+	alias(libs.plugins.mod.publish.plugin).apply(false)
 }
 
-stonecutter active "1.21.7-fabric"
+stonecutter active file(".sc_active_version")
+// stonecutter active "1.21.7-fabric"
 
 stonecutter parameters {
 	constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge")
 	filters.include("**/*.fsh", "**/*.vsh")
 }
 
-stonecutter tasks {
-	order("publishModrinth")
-	order("publishCurseforge")
-}
-
 for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publish$version") {
 	group = "publishing"
 	dependsOn(stonecutter.tasks.named("publishMods") { metadata.version == version })
+}
+
+stonecutter parameters {
+	swaps["mod_version"] = "\"" + property("mod.version") + "\";"
+	swaps["mod_id"] = "\"" + property("mod.id") + "\";"
+	swaps["mod_name"] = "\"" + property("mod.name") + "\";"
+	swaps["mod_group"] = "\"" + property("mod.group") + "\";"
+	swaps["minecraft"] = "\"" + node.metadata.version + "\";"
+	constants["release"] = property("mod.id") != "template"
 }

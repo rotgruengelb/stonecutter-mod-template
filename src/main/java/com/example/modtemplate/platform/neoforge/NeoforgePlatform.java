@@ -2,7 +2,7 @@ package com.example.modtemplate.platform.neoforge;
 
 //? neoforge {
 
-/*import com.example.modtemplate.platform.Platform;
+import com.example.modtemplate.platform.Platform;
 import net.neoforged.fml.ModList;
 
 public class NeoforgePlatform implements Platform {
@@ -17,4 +17,4 @@ public class NeoforgePlatform implements Platform {
 		return ModLoader.NEOFORGE;
 	}
 }
-*///?}
+//?}

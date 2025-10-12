@@ -8,17 +8,17 @@ pluginManagement {
 		maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
 		maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
 	}
+	includeBuild("build-logic")
 }
 
 plugins {
-	id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
-	id("dev.kikugie.stonecutter") version "0.7-beta.4"
+	id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+	id("dev.kikugie.stonecutter") version "0.8-alpha.4"
 }
-
 stonecutter {
 	create(rootProject) {
 		fun match(version: String, vararg loaders: String) =
-			loaders.forEach { vers("$version-$it", version).buildscript = "build.$it.gradle.kts" }
+			loaders.forEach { version("$version-$it", version).buildscript = "build.$it.gradle.kts" }
 
 		match("1.21.7", "fabric", "neoforge")
 

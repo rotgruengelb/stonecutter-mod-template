@@ -1,7 +1,7 @@
 package com.example.modtemplate.platform.fabric;
 
 //? fabric {
-
+/*
 import com.example.modtemplate.platform.Platform;
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -17,4 +17,4 @@ public class FabricPlatform implements Platform {
 		return ModLoader.FABRIC;
 	}
 }
-//?}
+*///?}

@@ -1,7 +1,7 @@
 package com.example.modtemplate.platform.fabric;
 
 //? fabric {
-
+/*
 import com.example.modtemplate.ModTemplate;
 import net.fabricmc.api.ModInitializer;
 
@@ -13,4 +13,4 @@ public class FabricEntrypoint implements ModInitializer {
 		FabricEventSubscriber.registerEvents();
 	}
 }
-//?}
+*///?}
