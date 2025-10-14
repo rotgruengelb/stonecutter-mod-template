@@ -1,7 +1,7 @@
 package com.example.modtemplate.platform.neoforge;
 
 //? neoforge {
-
+/*
 import com.example.modtemplate.ModTemplate;
 import net.neoforged.fml.common.Mod;
 
@@ -12,4 +12,4 @@ public class NeoforgeEntrypoint {
 		ModTemplate.onInitialize();
 	}
 }
-//?}
+*///?}

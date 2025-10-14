@@ -6,10 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 //? fabric {
-/*import com.example.modtemplate.platform.fabric.FabricPlatform;
-*///?} neoforge {
-import com.example.modtemplate.platform.neoforge.NeoforgePlatform;
- //?}
+import com.example.modtemplate.platform.fabric.FabricPlatform;
+//?} neoforge {
+/*import com.example.modtemplate.platform.neoforge.NeoforgePlatform;
+ *///?}
 
 @SuppressWarnings("LoggingSimilarMessage")
 public class ModTemplate {
@@ -36,9 +36,9 @@ public class ModTemplate {
 
 	private static Platform createPlatformInstance() {
 		//? fabric {
-		/*return new FabricPlatform();
-		*///?} neoforge {
-		return new NeoforgePlatform();
-		 //?}
+		return new FabricPlatform();
+		//?} neoforge {
+		/*return new NeoforgePlatform();
+		 *///?}
 	}
 }

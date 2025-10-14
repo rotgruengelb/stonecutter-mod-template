@@ -1,7 +1,7 @@
 package com.example.modtemplate.platform.neoforge;
 
 //? neoforge {
-
+/*
 import com.example.modtemplate.event.ExampleEventHandler; // sample_content
 import net.minecraft.server.level.ServerPlayer; // sample_content
 import net.neoforged.bus.api.SubscribeEvent;
@@ -18,4 +18,4 @@ public class NeoforgeEventSubscriber {
 		} // sample_content
 	} // sample_content
 }
-//?}
+*///?}

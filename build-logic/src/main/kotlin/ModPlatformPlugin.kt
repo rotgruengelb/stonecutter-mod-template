@@ -3,7 +3,6 @@
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension
 import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
-import org.gradle.api.DefaultTask
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -54,7 +53,6 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		configureJava(stonecutter)
 		registerBuildAndCollectTask(extension, modVersion)
 		configurePublishing(extension, loader, stonecutter, modVersion, channelTag)
-		registerCopyIdeaIconTask()
 	}
 
 	private fun Project.configureJarTask(modId: String) {
