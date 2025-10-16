@@ -15,6 +15,7 @@ plugins {
 	id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 	id("dev.kikugie.stonecutter") version "0.8-alpha.4"
 }
+
 stonecutter {
 	create(rootProject) {
 		fun match(version: String, vararg loaders: String) =

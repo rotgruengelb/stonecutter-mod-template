@@ -6,8 +6,9 @@
   "authors": ["${authors}"],
   "contributors": ["${contributors}"],
   "contact": {
-    "sources": "",
-    "issues": ""
+    "sources": "${sources_url}",
+    "issues": "${issues_url}",
+    "homepage": "${homepage_url}"
   },
   "description": "${description}",
   "icon": "assets/icon.png",

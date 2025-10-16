@@ -14,7 +14,7 @@ import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import javax.inject.Inject
 
-fun Project.prop(name: String) = property(name) as String
+fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
@@ -67,6 +67,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		tasks.named<ProcessResources>("processResources") {
 			var contributors = prop("mod.contributors")
 			var authors = prop("mod.authors")
+			// if the issues url property is blank use sources url with /issues at the end
+
+			var issuesUrl = prop("mod.issues_url")
+			if (issuesUrl == "") {
+				issuesUrl = prop("mod.sources_url") + "/issues"
+			}
 
 			if (isFabric) {
 				contributors = contributors.replace(", ", "\", \"")
@@ -82,7 +88,10 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				"authors" to authors,
 				"contributors" to contributors,
 				"license" to prop("mod.license"),
-				"description" to prop("mod.description")
+				"description" to prop("mod.description"),
+				"issues_url" to issuesUrl,
+				"homepage_url" to prop("mod.homepage_url"),
+				"sources_url" to prop("mod.sources_url"),
 			)
 
 			when {
