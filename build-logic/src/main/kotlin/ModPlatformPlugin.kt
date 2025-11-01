@@ -18,10 +18,12 @@ fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
+		val inferredLoader = project.buildFile.name.substringAfter('.').replace(".gradle.kts", "")
+		val inferredLoaderIsFabric = inferredLoader == "fabric"
 		val extension = extensions.create("platform", ModPlatformExtensionImpl::class.java).apply {
-			loader.convention("fabric")
-			jarTask.convention("remapJar")
-			sourcesJarTask.convention("remapSourcesJar")
+			loader.convention(inferredLoader)
+			jarTask.convention(if (inferredLoaderIsFabric) "remapJar" else "jar")
+			sourcesJarTask.convention(if (inferredLoaderIsFabric) "remapSourcesJar" else "sourcesJar")
 		}
 
 		afterEvaluate {

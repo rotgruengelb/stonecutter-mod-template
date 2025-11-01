@@ -4,9 +4,6 @@ plugins {
 }
 
 platform {
-	loader = "neoforge"
-	jarTask = "jar"
-	sourcesJarTask = "sourcesJar"
 }
 
 neoForge {
@@ -20,13 +17,16 @@ neoForge {
 	}
 
 	runs {
-		register("neoforge-client") {
-			gameDirectory = file("run/")
+		register("client") {
 			client()
-		}
-		register("neoforge-server") {
 			gameDirectory = file("run/")
+			ideName = "NeoForge Client"
+			programArgument("--username=Dev")
+		}
+		register("server") {
 			server()
+			gameDirectory = file("run/")
+			ideName = "NeoForge Server"
 		}
 	}
 
