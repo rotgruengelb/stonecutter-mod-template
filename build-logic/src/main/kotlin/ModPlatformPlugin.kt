@@ -9,6 +9,7 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Copy
+import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -149,7 +150,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			val srcJarTask = tasks.named(ext.sourcesJarTask.get()).map { it as Jar }
 			val currentVersion = stonecutter.current.version
 			val deps = ext.publishing.dependencies
-			val testWithStaging = providers.environmentVariable("v").orNull == "true"
+			val testWithStaging = providers.environmentVariable("TEST_PUBLISHING_WITH_MR_STAGING").orNull?.toDefaultLowerCase() == "true"
 
 			file.set(jarTask.flatMap(Jar::getArchiveFile))
 			additionalFiles.from(srcJarTask.flatMap(Jar::getArchiveFile))
