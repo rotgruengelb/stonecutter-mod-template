@@ -20,13 +20,13 @@ neoForge {
 		register("client") {
 			client()
 			gameDirectory = file("run/")
-			ideName = "NeoForge Client"
+			ideName = "NeoForge Client (${stonecutter.active?.project})"
 			programArgument("--username=Dev")
 		}
 		register("server") {
 			server()
 			gameDirectory = file("run/")
-			ideName = "NeoForge Server"
+			ideName = "NeoForge Server (${stonecutter.active?.project})"
 		}
 	}
 
