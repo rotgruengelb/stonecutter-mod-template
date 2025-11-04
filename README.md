@@ -49,12 +49,23 @@ a button to switch the active version, alongside other utilities.
 
 Edit `gradle.properties` to set your mod's metadata:
 
-* `mod.id` - Your mod's identifier (lowercase, no spaces)
-* `mod.name` - Display name
-* `mod.version` - Version number
-* `mod.group` - Java package group (e.g., `com.yourname`)
-* `mod.authors` - Name of the author(s) (comma-separated)
-* `mod.description` - Short description
+| Property           | Description                                  | Example                                                           |
+|--------------------|----------------------------------------------|-------------------------------------------------------------------|
+| `mod.id`           | Your mod’s identifier (lowercase, no spaces) | `modtemplate`                                                     |
+| `mod.name`         | Display name of your mod                     | `Mod Template`                                                    |
+| `mod.group`        | Java package group                           | `com.example`                                                     |
+| `mod.version`      | Mod version number                           | `0.1.0`                                                           |
+| `mod.channel_tag`  | Optional release channel tag                 | `-alpha.0`                                                        |
+| `mod.authors`      | Name of the author(s), comma-separated       | `AuthorName`                                                      |
+| `mod.contributors` | Contributor names, comma-separated           | `ContributorName, AnotherContributorName`                         |
+| `mod.license`      | License type                                 | `MIT`                                                             |
+| `mod.description`  | Short mod description                        | `Example Description`                                             |
+| `mod.sources_url`  | Link to your source code repository          | `https://github.com/rotgruengelb/stonecutter-mod-template`        |
+| `mod.homepage_url` | Mod homepage or info page                    | `https://github.com/rotgruengelb/stonecutter-mod-template`        |
+| `mod.issues_url`   | Link to issue tracker                        | `https://github.com/rotgruengelb/stonecutter-mod-template/issues` |
+
+Dependencies/Properties that are specific to a version/loader 
+are defined in `gradle.properties` as `[VERSIONED]` then set in `versions/{version}-{loader}/gradle.properties`.
 
 #### 5. **Rename package structure**
 
@@ -68,12 +79,14 @@ Rename these files to match your `mod.id`:
 * `src/main/resources/modtemplate.accesswidener`
 * `src/main/resources/modtemplate.mixins.json`
 
+Replace and `src/main/resources/assets/icon.png` and `.idea/icon.png` with the mods icon.
+
 ### Development
 
 ## Stonecutter
 
 [Stonecutter](https://stonecutter.kikugie.dev/) allows multiple Minecraft versions and loaders in a single codebase.
-Configure versions in `stonecutter.gradle.kts`.
+Configure Stonecutter in `stonecutter.gradle.kts` and `settings.gradle.kts`.
 
 Example of platform-specific code using Stonecutter comments:
 
