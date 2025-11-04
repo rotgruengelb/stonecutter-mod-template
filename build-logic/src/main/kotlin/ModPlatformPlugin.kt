@@ -4,6 +4,7 @@ import dev.kikugie.stonecutter.build.StonecutterBuildExtension
 import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
 import org.gradle.api.JavaVersion
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
@@ -13,6 +14,7 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
+import java.util.Locale
 import javax.inject.Inject
 
 fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
@@ -21,6 +23,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
 		val inferredLoader = project.buildFile.name.substringAfter('.').replace(".gradle.kts", "")
 		val inferredLoaderIsFabric = inferredLoader == "fabric"
+
 		val extension = extensions.create("platform", ModPlatformExtensionImpl::class.java).apply {
 			loader.convention(inferredLoader)
 			jarTask.convention(if (inferredLoaderIsFabric) "remapJar" else "jar")
@@ -44,15 +47,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 		val stonecutter = extensions.getByType<StonecutterBuildExtension>()
 
-		listOf(
-			"java", "me.modmuss50.mod-publish-plugin"
-		).forEach { apply(plugin = it) }
+		listOf("java", "me.modmuss50.mod-publish-plugin").forEach { apply(plugin = it) }
 
 		version = "$modVersion$channelTag+$mcVersion-$loader"
 
 		configureJarTask(modId)
-		configureProcessResources(isFabric, isNeoForge, modId, modVersion, mcVersion)
-		configureJsonLang(modId)
+		configureProcessResources(isFabric, isNeoForge, modId, modVersion, mcVersion, extension)
 		configureJava(stonecutter)
 		registerBuildAndCollectTask(extension, modVersion)
 		configurePublishing(extension, loader, stonecutter, modVersion, channelTag)
@@ -65,21 +65,59 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.configureProcessResources(
-		isFabric: Boolean, isNeoForge: Boolean, modId: String, modVersion: String, mcVersion: String
+		isFabric: Boolean, isNeoForge: Boolean, modId: String, modVersion: String, mcVersion: String, extension: ModPlatformExtensionImpl
 	) {
 		tasks.named<ProcessResources>("processResources") {
 			var contributors = prop("mod.contributors")
 			var authors = prop("mod.authors")
-			// if the issues url property is blank use sources url with /issues at the end
-
 			var issuesUrl = prop("mod.issues_url")
-			if (issuesUrl == "") {
-				issuesUrl = prop("mod.sources_url") + "/issues"
-			}
+			if (issuesUrl == "") issuesUrl = prop("mod.sources_url") + "/issues"
 
 			if (isFabric) {
 				contributors = contributors.replace(", ", "\", \"")
 				authors = authors.replace(", ", "\", \"")
+			}
+
+			val deps = (extension.dependencies)
+
+			val fabricDeps = buildString {
+				fun joinDeps(container: NamedDomainObjectContainer<Dependency>): String {
+					return container.joinToString(",") { "\"${it.modid.get()}\": \"${it.versionRange.get()}\"" }
+				}
+
+				val required = joinDeps(deps.required)
+				if (required.isNotEmpty()) append("\"depends\": { $required }, ")
+
+				val optional = joinDeps(deps.optional)
+				if (optional.isNotEmpty()) append("\"recommends\": { $optional }, ")
+
+				val incompatible = joinDeps(deps.incompatible)
+				if (incompatible.isNotEmpty()) append("\"breaks\": { $incompatible }, ")
+
+			}.trimEnd(' ', ',')
+
+			val neoForgeDeps = buildString {
+				deps.required.forEach {
+					append("""[[dependencies.$modId]]
+						modId = "${it.modid.get()}"
+						side = "${it.environment.get().uppercase(Locale.getDefault())}"
+						versionRange = "${it.forgeVersionRange.get()}"
+						type = "required"""")
+				}
+				deps.optional.forEach {
+					append("""[[dependencies.$modId]]
+							modId = "${it.modid.get()}"
+							side = "${it.environment.get().uppercase(Locale.getDefault())}"
+							versionRange = "${it.forgeVersionRange.get()}"
+							type = "optional"""")
+				}
+				deps.incompatible.forEach {
+					append("""[[dependencies.$modId]]
+						modId = "${it.modid.get()}"
+						side = "${it.environment.get().uppercase(Locale.getDefault())}"
+						versionRange = "${it.forgeVersionRange.get()}"
+						type = "incompatible"""")
+				}
 			}
 
 			val props = mapOf(
@@ -95,21 +133,22 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				"issues_url" to issuesUrl,
 				"homepage_url" to prop("mod.homepage_url"),
 				"sources_url" to prop("mod.sources_url"),
+				"dependencies" to if (isFabric) fabricDeps else neoForgeDeps
 			)
 
 			when {
-				isFabric -> filesMatching("fabric.mod.json") { expand(props) }
-				isNeoForge -> filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
+				isFabric -> {
+					filesMatching("fabric.mod.json") { expand(props) }
+					exclude("META-INF/neoforge.mods.toml")
+				}
+				isNeoForge -> {
+					filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
+					exclude("fabric.mod.json")
+				}
 			}
 		}
 	}
 
-	private fun Project.configureJsonLang(modId: String) {
-//		extensions.configure<JsonLangExtension>("jsonlang") {
-//			languageDirectories = listOf("assets/$modId/lang")
-//			prettyPrint = true
-//		}
-	}
 
 	private fun Project.configureJava(stonecutter: StonecutterBuildExtension) {
 		extensions.configure<JavaPluginExtension>("java") {
@@ -149,8 +188,9 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			val jarTask = tasks.named(ext.jarTask.get()).map { it as Jar }
 			val srcJarTask = tasks.named(ext.sourcesJarTask.get()).map { it as Jar }
 			val currentVersion = stonecutter.current.version
-			val deps = ext.publishing.dependencies
-			val testWithStaging = providers.environmentVariable("TEST_PUBLISHING_WITH_MR_STAGING").orNull?.toDefaultLowerCase() == "true"
+			val deps = ext.dependencies
+			val testWithStaging =
+				providers.environmentVariable("TEST_PUBLISHING_WITH_MR_STAGING").orNull?.toDefaultLowerCase() == "true"
 
 			file.set(jarTask.flatMap(Jar::getArchiveFile))
 			additionalFiles.from(srcJarTask.flatMap(Jar::getArchiveFile))
@@ -172,7 +212,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun ModPublishExtension.modrinth(
-		deps: DependencyContainer,
+		deps: DependenciesConfig,
 		ext: ModPlatformExtensionImpl,
 		currentVersion: String,
 		additionalVersions: List<String>,
@@ -189,9 +229,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		deps.embeds.forEach { dep -> whenNotNull(dep.modrinth) { embeds(it) } }
 	}
 
-
 	private fun ModPublishExtension.curseforge(
-		deps: DependencyContainer, currentVersion: String, additionalVersions: List<String>
+		deps: DependenciesConfig, currentVersion: String, additionalVersions: List<String>
 	) = curseforge {
 		projectId = project.prop("publish.curseforge")
 		accessToken = project.providers.environmentVariable("CURSEFORGE_API_KEY").orNull

@@ -4,9 +4,18 @@ plugins {
 }
 
 platform {
-	publishing {
-		required("fabric-api", "fabric-api")
-		// optional("modmenu", "modmenu")
+	loader = "fabric"
+	dependencies {
+		required("minecraft") {
+			versionRange = prop("deps.minecraft")
+		}
+		required("fabirc-api") {
+			slug("fabric-api")
+			versionRange = ">=${prop("deps.fabric-api")}"
+		}
+		required("fabircloader") {
+			versionRange = ">=0.16.14"
+		}
 	}
 }
 

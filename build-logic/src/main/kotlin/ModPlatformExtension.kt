@@ -7,60 +7,86 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import javax.inject.Inject
 
-fun NamedDomainObjectContainer<PublishingDependency>.add(slug: String) {
-	create(slug) {
-		modrinth.set(slug)
-		curseforge.set(slug)
-	}
+fun NamedDomainObjectContainer<Dependency>.add(modid: String, configure: Action<Dependency>) {
+	create(modid, configure)
 }
 
-fun NamedDomainObjectContainer<PublishingDependency>.add(modrinthSlug: String?, curseforgeSlug: String?) {
-	val id = modrinthSlug ?: curseforgeSlug ?: error("At least one slug (Modrinth or CurseForge) must be provided")
-
-	create(id) {
+fun NamedDomainObjectContainer<Dependency>.add(
+	modid: String, modrinthSlug: String?, curseforgeSlug: String?
+) {
+	create(modid) {
 		if (modrinthSlug != null) modrinth.set(modrinthSlug)
 		if (curseforgeSlug != null) curseforge.set(curseforgeSlug)
 	}
 }
 
+
 interface ModPlatformExtension {
 	val loader: Property<String>
 	val jarTask: Property<String>
 	val sourcesJarTask: Property<String>
-	val publishing: PublishingConfig
-	fun publishing(action: Action<PublishingConfig>)
+	val dependencies: DependenciesConfig
+
+	fun dependencies(action: Action<DependenciesConfig>)
 }
 
-interface PublishingConfig {
-	val dependencies: DependencyContainer
-	fun dependencies(action: Action<DependencyContainer>)
-	fun required(modrinthSlug: String, curseforgeSlug: String? = modrinthSlug)
-	fun optional(modrinthSlug: String, curseforgeSlug: String? = modrinthSlug)
-	fun incompatible(modrinthSlug: String, curseforgeSlug: String? = modrinthSlug)
-	fun embeds(modrinthSlug: String, curseforgeSlug: String? = modrinthSlug)
+interface DependenciesConfig {
+	val required: NamedDomainObjectContainer<Dependency>
+	val optional: NamedDomainObjectContainer<Dependency>
+	val incompatible: NamedDomainObjectContainer<Dependency>
+	val embeds: NamedDomainObjectContainer<Dependency>
+
+	fun required(modid: String, action: Action<Dependency>)
+	fun optional(modid: String, action: Action<Dependency>)
+	fun incompatible(modid: String, action: Action<Dependency>)
+	fun embeds(modid: String, action: Action<Dependency>)
 }
 
-interface DependencyContainer {
-	val required: NamedDomainObjectContainer<PublishingDependency>
-	val optional: NamedDomainObjectContainer<PublishingDependency>
-	val incompatible: NamedDomainObjectContainer<PublishingDependency>
-	val embeds: NamedDomainObjectContainer<PublishingDependency>
-}
-
-interface PublishingDependency {
+interface Dependency {
+	val modid: Property<String>
 	val modrinth: Property<String>
 	val curseforge: Property<String>
+	val versionRange: Property<String>
+	val forgeVersionRange: Property<String>
+	val environment: Property<String>
+
+	fun slug(modrinthSlug: String?, curseforgeSlug: String? = modrinthSlug)
+	fun slug(modrinthAndCurseforgeSlug: String)
+	fun slugModrinth(value: String)
+	fun slugCurseforge(value: String)
 }
 
-abstract class PublishingDependencyImpl @Inject constructor(
+abstract class DependencyImpl @Inject constructor(
 	val name: String
-) : PublishingDependency {
+) : Dependency {
 
 	@get:Inject
 	abstract val objects: ObjectFactory
 
+	override val modid: Property<String> = objects.property(String::class.java).convention(name)
 	override val modrinth: Property<String> = objects.property(String::class.java)
 	override val curseforge: Property<String> = objects.property(String::class.java)
+	override val versionRange: Property<String> = objects.property(String::class.java).convention("*")
+	override val forgeVersionRange: Property<String> = objects.property(String::class.java)
+	override val environment: Property<String> = objects.property(String::class.java).convention("both")
+
+	override fun slug(modrinthSlug: String?, curseforgeSlug: String?) {
+		if (modrinthSlug != null) modrinth.set(modrinthSlug)
+		if (curseforgeSlug != null) curseforge.set(curseforgeSlug)
+	}
+
+	override fun slug(modrinthAndCurseforgeSlug: String) {
+		modrinth.set(modrinthAndCurseforgeSlug)
+		curseforge.set(modrinthAndCurseforgeSlug)
+	}
+
+	override fun slugModrinth(value: String) {
+		modrinth.set(value)
+	}
+
+	override fun slugCurseforge(value: String) {
+		curseforge.set(value)
+	}
 }
 
 abstract class ModPlatformExtensionImpl @Inject constructor(project: Project) : ModPlatformExtension {
@@ -68,36 +94,25 @@ abstract class ModPlatformExtensionImpl @Inject constructor(project: Project) : 
 	override val loader: Property<String> = objects.property(String::class.java)
 	override val jarTask: Property<String> = objects.property(String::class.java)
 	override val sourcesJarTask: Property<String> = objects.property(String::class.java)
-	override val publishing: PublishingConfig = objects.newInstance(PublishingConfigImpl::class.java, project)
-	override fun publishing(action: Action<PublishingConfig>) = action.execute(publishing)
-}
-
-abstract class PublishingConfigImpl @Inject constructor(project: Project) : PublishingConfig {
-	private val objects = project.objects
-	override val dependencies: DependencyContainer = objects.newInstance(DependencyContainerImpl::class.java, project)
-	override fun dependencies(action: Action<DependencyContainer>) = action.execute(dependencies)
-
-	override fun required(modrinthSlug: String, curseforgeSlug: String?) =
-		dependencies.required.add(modrinthSlug, curseforgeSlug)
-
-	override fun optional(modrinthSlug: String, curseforgeSlug: String?) =
-		dependencies.optional.add(modrinthSlug, curseforgeSlug)
-
-	override fun incompatible(modrinthSlug: String, curseforgeSlug: String?) =
-		dependencies.incompatible.add(modrinthSlug, curseforgeSlug)
-
-	override fun embeds(modrinthSlug: String, curseforgeSlug: String?) =
-		dependencies.embeds.add(modrinthSlug, curseforgeSlug)
+	override val dependencies: DependenciesConfig = objects.newInstance(DependenciesConfigImpl::class.java, project)
+	override fun dependencies(action: Action<DependenciesConfig>) = action.execute(dependencies)
 }
 
 @Suppress("UNCHECKED_CAST")
-abstract class DependencyContainerImpl @Inject constructor(project: Project) : DependencyContainer {
-	override val required: NamedDomainObjectContainer<PublishingDependency> =
-		project.container(PublishingDependencyImpl::class.java) as NamedDomainObjectContainer<PublishingDependency>
-	override val optional: NamedDomainObjectContainer<PublishingDependency> =
-		project.container(PublishingDependencyImpl::class.java) as NamedDomainObjectContainer<PublishingDependency>
-	override val incompatible: NamedDomainObjectContainer<PublishingDependency> =
-		project.container(PublishingDependencyImpl::class.java) as NamedDomainObjectContainer<PublishingDependency>
-	override val embeds: NamedDomainObjectContainer<PublishingDependency> =
-		project.container(PublishingDependencyImpl::class.java) as NamedDomainObjectContainer<PublishingDependency>
+abstract class DependenciesConfigImpl @Inject constructor(project: Project) : DependenciesConfig {
+	private val objects = project.objects
+
+	override val required: NamedDomainObjectContainer<Dependency> =
+		project.container(DependencyImpl::class.java) as NamedDomainObjectContainer<Dependency>
+	override val optional: NamedDomainObjectContainer<Dependency> =
+		project.container(DependencyImpl::class.java) as NamedDomainObjectContainer<Dependency>
+	override val incompatible: NamedDomainObjectContainer<Dependency> =
+		project.container(DependencyImpl::class.java) as NamedDomainObjectContainer<Dependency>
+	override val embeds: NamedDomainObjectContainer<Dependency> =
+		project.container(DependencyImpl::class.java) as NamedDomainObjectContainer<Dependency>
+
+	override fun required(modid: String, action: Action<Dependency>) = required.add(modid, action)
+	override fun optional(modid: String, action: Action<Dependency>) = optional.add(modid, action)
+	override fun incompatible(modid: String, action: Action<Dependency>) = incompatible.add(modid, action)
+	override fun embeds(modid: String, action: Action<Dependency>) = embeds.add(modid, action)
 }

@@ -29,7 +29,5 @@
   "mixins": [
     "${id}.mixins.json"
   ],
-  "depends": {
-    "fabric-api": "*"
-  }
+  ${dependencies}
 }

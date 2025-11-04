@@ -19,13 +19,4 @@ description = '''${description}'''
 [[mixins]]
 config = "${id}.mixins.json"
 
-[[dependencies.${id}]]
-modId = "neoforge"
-type = "required"
-versionRange = "[1,)"
-ordering = "NONE"
-side = "BOTH"
-
-[[dependencies.${id}]]
-modId = "minecraft"
-type = "required"
+${dependencies}

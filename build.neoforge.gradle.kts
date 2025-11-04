@@ -4,6 +4,15 @@ plugins {
 }
 
 platform {
+	loader = "neoforge"
+	dependencies {
+		required("minecraft") {
+			forgeVersionRange = "[${property("deps.minecraft")}]"
+		}
+		required("neoforge") {
+			forgeVersionRange = "[1,)"
+		}
+	}
 }
 
 neoForge {
@@ -20,13 +29,13 @@ neoForge {
 		register("client") {
 			client()
 			gameDirectory = file("run/")
-			ideName = "NeoForge Client (${stonecutter.active?.project})"
+			ideName = "NeoForge Client (${stonecutter.active?.version})"
 			programArgument("--username=Dev")
 		}
 		register("server") {
 			server()
 			gameDirectory = file("run/")
-			ideName = "NeoForge Server (${stonecutter.active?.project})"
+			ideName = "NeoForge Server (${stonecutter.active?.version})"
 		}
 	}
 
