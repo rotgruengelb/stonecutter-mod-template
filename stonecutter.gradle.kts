@@ -26,5 +26,5 @@ stonecutter parameters {
 	swaps["mod_name"] = "\"" + property("mod.name") + "\";"
 	swaps["mod_group"] = "\"" + property("mod.group") + "\";"
 	swaps["minecraft"] = "\"" + node.metadata.version + "\";"
-	constants["release"] = property("mod.id") != "template"
+	constants["release"] = property("mod.id") != "modtemplate"
 }
