@@ -1,12 +1,12 @@
 [versions]
 stonecutter = "0.8-alpha.9"
 stonecutter-postprocess = "2.1-beta.8"
-mod-publish = "0.8.0"
+mod-publish = "0.8.4"
 dotenv-gradle = "4.0.0"
 fabric-loom = "1.13.3"
-neoforge-moddev = "2.0.113"
+neoforge-moddev = "2.0.116"
 foojay = "1.0.0"
-fabric-loader= "0.16.14"
+fabric-loader= "0.17.3"
 
 [libraries]
 kikugie-postprocess = { module = "dev.kikugie:postprocess", version.ref = "stonecutter-postprocess" }
