@@ -172,10 +172,10 @@ The current setup uses Fabric data generation for both platforms.
 
 ### Help and Support
 For help and support, consider the following places:
-- ['Kiku's Realm' Discord Server](https://discord.kikugie.dev/) for Stonecutter-related questions.
-- ['Cascading Colors' (My) Discord Server](https://discord.gg/aunYJB4wz9) for questions about this template and its setup.
-- ['The NeoForge Project' Discord Server](https://github.com/neoforged) for NeoForge-related questions.
-- ['The Fabric Project' Discord Server](https://discord.gg/v6v4pMv) for Fabric-related questions.
+- ["Kiku's Realm" Discord Server](https://discord.kikugie.dev/) for Stonecutter-related questions.
+- ["Cascading Colors" (My) Discord Server](https://discord.gg/aunYJB4wz9) for questions about this template and its setup.
+- ["The NeoForge Project" Discord Server](https://github.com/neoforged) for NeoForge-related questions.
+- ["The Fabric Project" Discord Server](https://discord.gg/v6v4pMv) for Fabric-related questions.
 
 ## License/Credits
 
