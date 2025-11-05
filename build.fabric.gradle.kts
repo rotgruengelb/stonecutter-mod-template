@@ -39,6 +39,13 @@ loom {
 	}
 }
 
+fabricApi {
+	configureDataGeneration() {
+		outputDirectory = file("$rootDir/src/main/generated")
+		client = true
+	}
+}
+
 dependencies {
 	minecraft("com.mojang:minecraft:${prop("deps.minecraft")}")
 	mappings(
