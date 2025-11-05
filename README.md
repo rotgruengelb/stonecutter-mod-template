@@ -82,9 +82,9 @@ Rename these files to match your `mod.id`:
 
 Replace and `src/main/resources/assets/icon.png` and `.idea/icon.png` with the mods icon.
 
-### Development
+## Development
 
-## Stonecutter
+### Stonecutter
 
 [Stonecutter](https://stonecutter.kikugie.dev/) allows multiple Minecraft versions and loaders in a single codebase.
 Configure Stonecutter in `stonecutter.gradle.kts` and `settings.gradle.kts`.
@@ -101,13 +101,13 @@ neoforgeOnlyCode();
 
 For more details, read the [Stonecutter documentation](https://stonecutter.kikugie.dev/wiki/).
 
-## Running in Development
+### Running in Development
 
 The Gradle plugins of the respective platform should provide run configurations.
 If not, you can run the server and client with the respective Gradle tasks.
 Be careful to run the correct task for the selected Stonecutter platform and Minecraft version.
 
-## Platform Abstraction
+### Platform Abstraction
 
 The template uses a platform abstraction pattern to keep shared code loader-agnostic:
 
@@ -115,7 +115,7 @@ The template uses a platform abstraction pattern to keep shared code loader-agno
 * **Platform-specific code** goes in `com.example.modtemplate.platform.{fabric|neoforge}`
 * The `Platform` interface provides loader-specific functionality to shared code
 
-## Adding Dependencies
+### Adding Dependencies
 
 To add dependencies for a specific platform, modify the `platform` block in the respective `build.gradle.kts` file.
 The declared dependencies are automatically added to the metadata file for the loader and when publishing the mod to
@@ -136,7 +136,7 @@ platform {
 }
 ```
 
-## Data Generation
+### Data Generation
 
 Run Fabric data generation to create recipes, tags, and other data:
 
