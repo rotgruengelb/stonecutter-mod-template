@@ -67,7 +67,7 @@ abstract class DependencyImpl @Inject constructor(
 	override val modrinth: Property<String> = objects.property(String::class.java)
 	override val curseforge: Property<String> = objects.property(String::class.java)
 	override val versionRange: Property<String> = objects.property(String::class.java).convention("*")
-	override val forgeVersionRange: Property<String> = objects.property(String::class.java)
+	override val forgeVersionRange: Property<String> = objects.property(String::class.java).convention("(,]")
 	override val environment: Property<String> = objects.property(String::class.java).convention("both")
 
 	override fun slug(modrinthSlug: String?, curseforgeSlug: String?) {
