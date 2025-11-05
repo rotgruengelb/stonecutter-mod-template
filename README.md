@@ -98,6 +98,15 @@ Example of platform-specific code using Stonecutter comments:
 neoforgeOnlyCode();
 //?}
 ```
+Verson-specific code works similarly:
+
+```java
+//? if 1.21.7 {
+LOGGER.info("hello 1.21.7!");
+//?} else {
+/*LOGGER.info("hello from any other version!");
+ *///?}
+```
 
 For more details, read the [Stonecutter documentation](https://stonecutter.kikugie.dev/wiki/).
 
