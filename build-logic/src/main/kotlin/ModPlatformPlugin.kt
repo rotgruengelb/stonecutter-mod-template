@@ -54,7 +54,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		configureJarTask(modId)
 		configureProcessResources(isFabric, isNeoForge, modId, modVersion, mcVersion, extension)
 		configureJava(stonecutter)
-		registerBuildAndCollectTask(extension, modVersion)
+		registerBuildAndCollectTask(extension, "$modVersion$channelTag")
 		configurePublishing(extension, loader, stonecutter, modVersion, channelTag)
 	}
 
