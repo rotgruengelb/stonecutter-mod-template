@@ -63,6 +63,7 @@ Edit `gradle.properties` to set your mod's metadata:
 | `mod.sources_url`  | Link to your source code repository          | `https://github.com/rotgruengelb/stonecutter-mod-template`        |
 | `mod.homepage_url` | Mod homepage or info page                    | `https://github.com/rotgruengelb/stonecutter-mod-template`        |
 | `mod.issues_url`   | Link to issue tracker                        | `https://github.com/rotgruengelb/stonecutter-mod-template/issues` |
+| `mod.discord_url`  | Link to a Discord invite                     | `https://discord.gg/aunYJB4wz9`                                   |
 
 Dependencies/Properties that are specific to a version/loader 
 are defined in `gradle.properties` as `[VERSIONED]` then set in `versions/{version}-{loader}/gradle.properties`.

@@ -9,13 +9,14 @@ platform {
 		required("minecraft") {
 			versionRange = prop("deps.minecraft")
 		}
-		required("fabirc-api") {
+		required("fabric-api") {
 			slug("fabric-api")
 			versionRange = ">=${prop("deps.fabric-api")}"
 		}
-		required("fabircloader") {
-			versionRange = ">=0.16.14"
+		required("fabricloader") {
+			versionRange = ">=${libs.fabric.loader.get().version}"
 		}
+		optional("modmenu") {}
 	}
 }
 

@@ -14,7 +14,7 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
-import java.util.Locale
+import java.util.*
 import javax.inject.Inject
 
 fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
@@ -65,7 +65,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.configureProcessResources(
-		isFabric: Boolean, isNeoForge: Boolean, modId: String, modVersion: String, mcVersion: String, extension: ModPlatformExtensionImpl
+		isFabric: Boolean,
+		isNeoForge: Boolean,
+		modId: String,
+		modVersion: String,
+		mcVersion: String,
+		extension: ModPlatformExtensionImpl
 	) {
 		tasks.named<ProcessResources>("processResources") {
 			var contributors = prop("mod.contributors")
@@ -78,47 +83,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				authors = authors.replace(", ", "\", \"")
 			}
 
-			val deps = (extension.dependencies)
-
-			val fabricDeps = buildString {
-				fun joinDeps(container: NamedDomainObjectContainer<Dependency>): String {
-					return container.joinToString(",") { "\"${it.modid.get()}\": \"${it.versionRange.get()}\"" }
-				}
-
-				val required = joinDeps(deps.required)
-				if (required.isNotEmpty()) append("\"depends\": { $required }, ")
-
-				val optional = joinDeps(deps.optional)
-				if (optional.isNotEmpty()) append("\"recommends\": { $optional }, ")
-
-				val incompatible = joinDeps(deps.incompatible)
-				if (incompatible.isNotEmpty()) append("\"breaks\": { $incompatible }, ")
-
-			}.trimEnd(' ', ',')
-
-			val neoForgeDeps = buildString {
-				deps.required.forEach {
-					append("""[[dependencies.$modId]]
-						modId = "${it.modid.get()}"
-						side = "${it.environment.get().uppercase(Locale.getDefault())}"
-						versionRange = "${it.forgeVersionRange.get()}"
-						type = "required"""")
-				}
-				deps.optional.forEach {
-					append("""[[dependencies.$modId]]
-							modId = "${it.modid.get()}"
-							side = "${it.environment.get().uppercase(Locale.getDefault())}"
-							versionRange = "${it.forgeVersionRange.get()}"
-							type = "optional"""")
-				}
-				deps.incompatible.forEach {
-					append("""[[dependencies.$modId]]
-						modId = "${it.modid.get()}"
-						side = "${it.environment.get().uppercase(Locale.getDefault())}"
-						versionRange = "${it.forgeVersionRange.get()}"
-						type = "incompatible"""")
-				}
-			}
+			val deps = extension.dependencies
+			val dependencies = buildDependenciesBlock(isFabric, modId, deps)
 
 			val props = mapOf(
 				"version" to modVersion,
@@ -133,22 +99,67 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				"issues_url" to issuesUrl,
 				"homepage_url" to prop("mod.homepage_url"),
 				"sources_url" to prop("mod.sources_url"),
-				"dependencies" to if (isFabric) fabricDeps else neoForgeDeps
+				"discord_url" to prop("mod.discord_url"),
+				"dependencies" to dependencies
 			)
 
 			when {
 				isFabric -> {
 					filesMatching("fabric.mod.json") { expand(props) }
-					exclude("META-INF/neoforge.mods.toml")
+					exclude("META-INF/neoforge.mods.toml", "META-INF/accesstransformer.cfg")
 				}
+
 				isNeoForge -> {
 					filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
-					exclude("fabric.mod.json")
+					exclude("fabric.mod.json", "${modId}.accesswidener")
 				}
 			}
 		}
 	}
 
+	private fun buildDependenciesBlock(
+		isFabric: Boolean, modId: String, deps: DependenciesConfig
+	): String = if (isFabric) {
+		buildString {
+			fun joinGroup(
+				name: String, container: NamedDomainObjectContainer<Dependency>
+			): String? {
+				if (container.isEmpty()) return null
+				val entries = container.joinToString(",\n    ") {
+					"\"${it.modid.get()}\": \"${it.versionRange.get()}\""
+				}
+				return "\n  \"$name\": {\n    $entries\n  }"
+			}
+
+			val groups = listOfNotNull(
+				joinGroup("depends", deps.required),
+				joinGroup("recommends", deps.optional),
+				joinGroup("breaks", deps.incompatible)
+			)
+
+			append(groups.joinToString(","))
+		}
+	} else {
+		buildString {
+			fun appendBlock(container: NamedDomainObjectContainer<Dependency>, type: String) {
+				container.forEach {
+					appendLine(
+						"""
+						[[dependencies.$modId]]
+						modId = "${it.modid.get()}"
+						side = "${it.environment.get().uppercase(Locale.getDefault())}"
+                        versionRange = "${it.forgeVersionRange.get()}"
+                        type = "$type"
+						""".trimIndent()
+					)
+				}
+			}
+
+			appendBlock(deps.required, "required")
+			appendBlock(deps.optional, "optional")
+			appendBlock(deps.incompatible, "incompatible")
+		}
+	}
 
 	private fun Project.configureJava(stonecutter: StonecutterBuildExtension) {
 		extensions.configure<JavaPluginExtension>("java") {
