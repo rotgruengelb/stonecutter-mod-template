@@ -156,6 +156,27 @@ Run Fabric data generation to create recipes, tags, and other data:
 Generated files appear in `src/main/generated/`.
 The current setup uses Fabric data generation for both platforms.
 
+## Resouerces and Links
+- [Stonecutter Documentation](https://stonecutter.kikugie.dev/wiki/)
+- [NeoForge Documentation](https://docs.neoforged.net/docs/gettingstarted/)
+- [Fabric Documentation](https://docs.fabricmc.net/develop/)
+- [Pre-commit](https://pre-commit.com/)
+- [Git Source Control](https://git-scm.com/doc)
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- [Semantic Versioning](https://semver.org/)
+  - [How to denote a pre-release version](https://semver.org/#spec-item-9)
+- [Your Modrinth PAT](https://modrinth.com/settings/pats)
+- [Your CurseForge API Tokens](https://legacy.curseforge.com/account/api-tokens)
+- [GitHub Actions Documentation](https://docs.github.com/en/actions)
+- [Gradle Documentation](https://docs.gradle.org/current/userguide/userguide.html)
+
+### Help and Support
+For help and support, consider the following places:
+- ['Kiku's Realm' Discord Server](https://discord.kikugie.dev/) for Stonecutter-related questions.
+- ['Cascading Colors' (My) Discord Server](https://discord.gg/aunYJB4wz9) for questions about this template and its setup.
+- ['The NeoForge Project' Discord Server](https://github.com/neoforged) for NeoForge-related questions.
+- ['The Fabric Project' Discord Server](https://discord.gg/v6v4pMv) for Fabric-related questions.
+
 ## License/Credits
 
 This template is provided under the MIT License.
