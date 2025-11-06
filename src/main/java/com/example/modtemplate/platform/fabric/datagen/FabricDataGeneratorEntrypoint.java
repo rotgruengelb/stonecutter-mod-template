@@ -10,7 +10,7 @@ public class FabricDataGeneratorEntrypoint implements DataGeneratorEntrypoint {
 	@Override
 	public void onInitializeDataGenerator(FabricDataGenerator generator) {
 		final FabricDataGenerator.Pack pack = generator.createPack();
-		pack.addProvider((FabricDataOutput output) -> new ModRecipeProvider(output, generator.getRegistries())); // sample_content
+		pack.addProvider((FabricDataOutput output) -> new ModRecipeProvider(output, generator.getRegistries()));
 	}
 
 }
