@@ -73,6 +73,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		extension: ModPlatformExtensionImpl
 	) {
 		tasks.named<ProcessResources>("processResources") {
+			dependsOn(tasks.named("stonecutterGenerate"))
 			var contributors = prop("mod.contributors")
 			var authors = prop("mod.authors")
 			var issuesUrl = prop("mod.issues_url")
