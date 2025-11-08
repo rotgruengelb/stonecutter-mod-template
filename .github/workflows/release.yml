@@ -15,32 +15,7 @@ env:
 
 jobs:
   build:
-    name: Build Project
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Build artifacts
-        run: ./gradlew clean build --stacktrace
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: build/libs/
+    uses: ./.github/workflows/build_reusable.yml
 
   prepare:
     name: Prepare Release
@@ -50,29 +25,13 @@ jobs:
       contents: write
 
     outputs:
-      publish_github: ${{ steps.sync-props.outputs.publish_github }}
-      changed: ${{ steps.sync-props.outputs.changed }}
+      publish_github: ${{ steps.read-props.outputs.publish_github }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-          path: build/libs/
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
 
       - name: Generate changelog with git-cliff
         id: cliff
@@ -81,43 +40,40 @@ jobs:
           tag: ${{ github.ref_name }}
           output: CHANGELOG.md
 
-      - name: Sync gradle.properties with tag
-        id: sync-props
+      - name: Read gradle.properties values
+        id: read-props
         run: |
-          set -euo pipefail
-          TAG="${GITHUB_REF_NAME:-$(git describe --tags --abbrev=0)}"
-          echo "Syncing gradle.properties for tag $TAG"
-
           VERSION=$(grep '^mod.version=' gradle.properties | cut -d'=' -f2)
           CHANNEL_TAG=$(grep '^mod.channel_tag=' gradle.properties | cut -d'=' -f2)
           PUBLISH_GITHUB=$(grep '^publish.github=' gradle.properties | cut -d'=' -f2 || echo "false")
           FULL_VERSION="${VERSION}${CHANNEL_TAG}"
 
-          echo "- mod.version: ${VERSION}"
-          echo "- mod.channel_tag: ${CHANNEL_TAG}"
-          echo "- Combined: ${FULL_VERSION}"
-
-          if [[ "$FULL_VERSION" != "$TAG" ]]; then
-            echo "Updating gradle.properties to match tag..."
-            BASE_VERSION=$(echo "$TAG" | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-            CHANNEL=$(echo "$TAG" | sed -E "s/^${BASE_VERSION}//")
-            sed -i "s/^mod.version=.*/mod.version=${BASE_VERSION}/" gradle.properties
-            sed -i "s/^mod.channel_tag=.*/mod.channel_tag=${CHANNEL}/" gradle.properties
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
+          echo "mod.version=$VERSION"
+          echo "mod.channel_tag=$CHANNEL_TAG"
+          echo "Combined version=$FULL_VERSION"
 
           echo "publish_github=$PUBLISH_GITHUB" >> "$GITHUB_OUTPUT"
+          echo "full_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Commit version changes if needed
-        if: steps.sync-props.outputs.changed == 'true' && steps.sync-props.outputs.publish_github == 'true'
+      - name: Validate tag matches version
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add gradle.properties
-          git commit -m "chore(release): sync gradle.properties with tag ${GITHUB_REF_NAME}"
-          git push
+          TAG="${GITHUB_REF_NAME}"
+          FULL_VERSION="${{ steps.read-props.outputs.full_version }}"
+
+          echo "Validating tag '$TAG' against version '$FULL_VERSION'..."
+          if [[ "$TAG" != "$FULL_VERSION" ]]; then
+            echo "::error::Tag '$TAG' does not match version '$FULL_VERSION' in gradle.properties."
+            echo "Deleting tag and release..."
+
+            if gh release view "$TAG" &>/dev/null; then
+              echo "Deleting GitHub release for $TAG..."
+              gh release delete "$TAG" -y
+            fi
+
+            git push origin ":refs/tags/$TAG"
+            exit 1
+          fi
+          echo "✓ Tag matches version."
 
       - name: Upload changelog
         uses: actions/upload-artifact@v4
@@ -134,9 +90,6 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -170,50 +123,51 @@ jobs:
               gh release upload "$TAG" ./build/libs/* --clobber
             }
 
-  publish-modrinth:
-    name: Publish to Modrinth
+  publish:
+    name: Publish to CurseForge
     runs-on: ubuntu-latest
     needs: [ prepare, github-release ]
     continue-on-error: true
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Java
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/libs/
+
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: 21
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+          distribution: 'microsoft'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Publish to CurseForge (if available)
+        run: |
+          if ./gradlew tasks --all | grep -q "publishCurseforge"; then
+            ./gradlew publishCurseforge --stacktrace
+          else
+            echo "Skipping CurseForge publish, task not found."
+          fi
+
       - name: Publish to Modrinth (if available)
         run: |
           if ./gradlew tasks --all | grep -q "publishModrinth"; then
-            echo "Running publishModrinth..."
             ./gradlew publishModrinth --stacktrace
           else
             echo "Skipping Modrinth publish, task not found."
-          fi
-
-  publish-curseforge:
-    name: Publish to Curseforge
-    runs-on: ubuntu-latest
-    needs: [ prepare, github-release ]
-    continue-on-error: true
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
-      - name: Publish to Curseforge (if available)
-        run: |
-          if ./gradlew tasks --all | grep -q "publishCurseforge"; then
-            echo "Running publishCurseforge..."
-            ./gradlew publishCurseforge --stacktrace
-          else
-            echo "Skipping Curseforge publish, task not found."
           fi
