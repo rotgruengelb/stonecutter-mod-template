@@ -35,10 +35,9 @@ jobs:
 
       - name: Generate changelog with git-cliff
         id: cliff
-        uses: orhun/git-cliff-action@v3
+        uses: orhun/git-cliff-action@v4
         with:
-          tag: ${{ github.ref_name }}
-          output: CHANGELOG.md
+          args: --latest --strip header --config-url https://github.com/orhun/git-cliff/blob/main/examples/github-keepachangelog.toml?raw=true
 
       - name: Read gradle.properties values
         id: read-props
