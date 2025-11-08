@@ -37,7 +37,8 @@ jobs:
         id: cliff
         uses: orhun/git-cliff-action@v4
         with:
-          args: --latest --strip header --config-url https://github.com/orhun/git-cliff/blob/main/examples/github-keepachangelog.toml?raw=true
+          args: --latest --strip header --config-url https://github.com/orhun/git-cliff/blob/main/examples/github-keepachangelog.toml?raw=true --output CHANGELOG.md
+          version: 'v2.10.1'
 
       - name: Read gradle.properties values
         id: read-props
