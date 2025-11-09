@@ -84,8 +84,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				authors = authors.replace(", ", "\", \"")
 			}
 
-			val deps = extension.dependencies
-			val dependencies = buildDependenciesBlock(isFabric, modId, deps)
+			val dependencies = buildDependenciesBlock(isFabric, modId, extension.dependencies)
 
 			val props = mapOf(
 				"version" to modVersion,
@@ -107,12 +106,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			when {
 				isFabric -> {
 					filesMatching("fabric.mod.json") { expand(props) }
-					exclude("META-INF/neoforge.mods.toml", "META-INF/accesstransformer.cfg")
+					exclude("META-INF/neoforge.mods.toml", "META-INF/accesstransformer.cfg", ".cache")
 				}
 
 				isNeoForge -> {
 					filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
-					exclude("fabric.mod.json", "${modId}.accesswidener")
+					exclude("fabric.mod.json", "${modId}.accesswidener", ".cache")
 				}
 			}
 		}
@@ -146,12 +145,13 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				container.forEach {
 					appendLine(
 						"""
+
 						[[dependencies.$modId]]
 						modId = "${it.modid.get()}"
 						side = "${it.environment.get().uppercase(Locale.getDefault())}"
                         versionRange = "${it.forgeVersionRange.get()}"
                         type = "$type"
-						""".trimIndent()
+						""".replace("                  ", "").trimIndent()
 					)
 				}
 			}
