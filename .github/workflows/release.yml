@@ -133,7 +133,7 @@ jobs:
             for FILE in ./build/libs/$TAG/*; do
               NAME=$(basename "$FILE")
               gh release delete-asset "$TAG" "$NAME" -y || true
-              gh release upload "$TAG" "$FILE" --replace
+              gh release upload "$TAG" "$FILE" --clobber
             done
            fi
 
