@@ -232,10 +232,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		accessToken = project.providers.environmentVariable("MODRINTH_API_KEY").orNull
 		minecraftVersions.addAll(listOf(currentVersion) + additionalVersions)
 
-		deps.required.forEach { dep -> whenNotNull(dep.modrinth) { requires(it) } }
-		deps.optional.forEach { dep -> whenNotNull(dep.modrinth) { optional(it) } }
-		deps.incompatible.forEach { dep -> whenNotNull(dep.modrinth) { incompatible(it) } }
-		deps.embeds.forEach { dep -> whenNotNull(dep.modrinth) { embeds(it) } }
+		if (!staging) {
+			deps.required.forEach { dep -> whenNotNull(dep.modrinth) { requires(it) } }
+			deps.optional.forEach { dep -> whenNotNull(dep.modrinth) { optional(it) } }
+			deps.incompatible.forEach { dep -> whenNotNull(dep.modrinth) { incompatible(it) } }
+			deps.embeds.forEach { dep -> whenNotNull(dep.modrinth) { embeds(it) } }
+		}
 	}
 
 	private fun ModPublishExtension.curseforge(
