@@ -138,12 +138,17 @@ jobs:
            fi
 
 
-  publish:
+  platform-publish:
     name: Publish to CurseForge/Modrinth
     runs-on: ubuntu-latest
-    needs: [ prepare, github-release ]
+    needs: [ prepare ]
     continue-on-error: true
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
