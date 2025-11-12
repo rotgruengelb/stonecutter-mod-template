@@ -82,7 +82,7 @@ jobs:
           path: CHANGELOG.md
 
   github-release:
-    name: GitHub Release
+    name: Release to GitHub
     runs-on: ubuntu-latest
     needs: prepare
     if: needs.prepare.outputs.publish_github == 'true'
@@ -138,8 +138,8 @@ jobs:
            fi
 
 
-  platform-publish:
-    name: Publish to CurseForge/Modrinth
+  platform-release:
+    name: Release to CurseForge/Modrinth
     runs-on: ubuntu-latest
     needs: [ prepare ]
     continue-on-error: true

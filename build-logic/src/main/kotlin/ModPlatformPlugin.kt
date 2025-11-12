@@ -52,10 +52,10 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		version = "$modVersion$channelTag+$mcVersion-$loader"
 
 		configureJarTask(modId)
-		configureProcessResources(isFabric, isNeoForge, modId, modVersion, mcVersion, extension)
+		configureProcessResources(isFabric, isNeoForge, modId, "$modVersion$channelTag", mcVersion, extension)
 		configureJava(stonecutter)
 		registerBuildAndCollectTask(extension, "$modVersion$channelTag")
-		configurePublishing(extension, loader, stonecutter, modVersion, channelTag)
+		configurePublishing(extension, loader, stonecutter, "$modVersion$channelTag", channelTag, version.toString())
 	}
 
 	private fun Project.configureJarTask(modId: String) {
@@ -188,7 +188,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		loader: String,
 		stonecutter: StonecutterBuildExtension,
 		modVersion: String,
-		channelTag: String
+		channelTag: String,
+		fullVersion: String,
 	) {
 		val additionalVersions = (findProperty("publish.additionalVersions") as String?)?.split(',')?.map(String::trim)
 			?.filter(String::isNotEmpty).orEmpty()
@@ -207,14 +208,14 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			file.set(jarTask.flatMap(Jar::getArchiveFile))
 			additionalFiles.from(srcJarTask.flatMap(Jar::getArchiveFile))
 			type = releaseType
-			version.set(version.toString())
+			version = fullVersion
 			changelog.set(rootProject.file("CHANGELOG.md").readText())
 			modLoaders.add(loader)
 
 			displayName =
 				"${prop("mod.name")} $modVersion for $currentVersion ${loader.replaceFirstChar(Char::titlecase)}"
 
-			modrinth(deps, ext, currentVersion, additionalVersions, testWithStaging)
+			modrinth(deps, currentVersion, additionalVersions, testWithStaging)
 			if (!testWithStaging) curseforge(deps, currentVersion, additionalVersions)
 		}
 	}
@@ -224,11 +225,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun ModPublishExtension.modrinth(
-		deps: DependenciesConfig,
-		ext: ModPlatformExtensionImpl,
-		currentVersion: String,
-		additionalVersions: List<String>,
-		staging: Boolean
+		deps: DependenciesConfig, currentVersion: String, additionalVersions: List<String>, staging: Boolean
 	) = modrinth {
 		if (staging) apiEndpoint = "https://staging-api.modrinth.com/v2"
 		projectId = project.prop("publish.modrinth")
