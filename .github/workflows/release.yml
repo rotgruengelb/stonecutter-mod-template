@@ -108,20 +108,30 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           echo "Creating or updating release for $TAG"
-          gh release create "$TAG" \
+          # Try to create the release first
+          if ! gh release create "$TAG" \
             --title "$TAG" \
             --notes-file CHANGELOG.md \
             --latest \
             --verify-tag \
-            --clobber \
-            ./build/libs/* || {
-              echo "Updating existing release..."
-              gh release edit "$TAG" \
-                --notes-file CHANGELOG.md \
-                --latest \
-                --clobber
-              gh release upload "$TAG" ./build/libs/* --clobber
-            }
+            ./build/libs/$TAG/*; then
+
+            echo "Release already exists. Updating existing release..."
+
+            # Update release notes and mark as latest
+            gh release edit "$TAG" \
+              --title "$TAG" \
+              --notes-file CHANGELOG.md \
+              --latest
+
+            # Re-upload artifacts (delete first to avoid duplicates)
+            for FILE in ./build/libs/$TAG/*; do
+              NAME=$(basename "$FILE")
+              gh release delete-asset "$TAG" "$NAME" -y || true
+              gh release upload "$TAG" "$FILE" --replace
+            done
+           fi
+
 
   publish:
     name: Publish to CurseForge/Modrinth
