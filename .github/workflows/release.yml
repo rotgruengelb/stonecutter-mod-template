@@ -155,6 +155,12 @@ jobs:
           name: build-artifacts
           path: build/libs/
 
+      - name: Download changelog
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog
+          path: .
+
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
