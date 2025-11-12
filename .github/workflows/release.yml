@@ -139,7 +139,7 @@ jobs:
 
 
   platform-release:
-    name: Release to CurseForge/Modrinth
+    name: Release to Platforms
     runs-on: ubuntu-latest
     needs: [ prepare ]
     continue-on-error: true
