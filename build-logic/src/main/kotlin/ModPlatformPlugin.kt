@@ -14,12 +14,12 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
-import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import java.util.*
 import javax.inject.Inject
 
 fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
+fun Project.env(variable: String): String? = providers.environmentVariable(variable).orNull
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
@@ -210,12 +210,18 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			channelTag.substringAfter('-').substringBefore('.').ifEmpty { "stable" })
 
 		extensions.configure<ModPublishExtension>("publishMods") {
+			val mrStaging = env("TEST_PUBLISHING_WITH_MR_STAGING")?.toDefaultLowerCase() == "true"
+
+			val modrinthAccessToken = env("MODRINTH_API_TOKEN")
+			val curseforgeAccessToken = env("CURSEFORGE_API_KEY")
+			if (modrinthAccessToken.isNullOrBlank() || (curseforgeAccessToken.isNullOrBlank() && !mrStaging)) {
+				dryRun = true
+			}
+
 			val jarTask = tasks.named(ext.jarTask.get()).map { it as Jar }
 			val srcJarTask = tasks.named(ext.sourcesJarTask.get()).map { it as Jar }
 			val currentVersion = stonecutter.current.version
 			val deps = ext.dependencies
-			val testWithStaging =
-				providers.environmentVariable("TEST_PUBLISHING_WITH_MR_STAGING").orNull?.toDefaultLowerCase() == "true"
 
 			file.set(jarTask.flatMap(Jar::getArchiveFile))
 			additionalFiles.from(srcJarTask.flatMap(Jar::getArchiveFile))
@@ -224,24 +230,27 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			changelog.set(rootProject.file("CHANGELOG.md").readText())
 			modLoaders.add(loader)
 
-			displayName =
-				"${prop("mod.name")} $modVersion ${loader.replaceFirstChar(Char::titlecase)} $currentVersion"
+			displayName = "${prop("mod.name")} $modVersion ${loader.replaceFirstChar(Char::titlecase)} $currentVersion"
 
-			modrinth(deps, currentVersion, additionalVersions, testWithStaging)
-			if (!testWithStaging) curseforge(deps, currentVersion, additionalVersions)
+			modrinth(deps, currentVersion, additionalVersions, mrStaging, modrinthAccessToken)
+			if (!mrStaging) curseforge(deps, currentVersion, additionalVersions, false, curseforgeAccessToken)
 		}
 	}
 
-	fun whenNotNull(slug: Property<String>, action: (String) -> Unit) {
-		if (!slug.orNull.isNullOrBlank()) action(slug.get())
+	fun whenNotNull(stringProp: Property<String>, action: (String) -> Unit) {
+		if (!stringProp.orNull.isNullOrBlank()) action(stringProp.get())
 	}
 
 	private fun ModPublishExtension.modrinth(
-		deps: DependenciesConfig, currentVersion: String, additionalVersions: List<String>, staging: Boolean
+		deps: DependenciesConfig,
+		currentVersion: String,
+		additionalVersions: List<String>,
+		staging: Boolean,
+		acesssToken: String?
 	) = modrinth {
 		if (staging) apiEndpoint = "https://staging-api.modrinth.com/v2"
 		projectId = project.prop("publish.modrinth")
-		accessToken = project.providers.environmentVariable("MODRINTH_API_KEY").orNull
+		accessToken = acesssToken
 		minecraftVersions.addAll(listOf(currentVersion) + additionalVersions)
 
 		if (!staging) {
@@ -253,10 +262,14 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun ModPublishExtension.curseforge(
-		deps: DependenciesConfig, currentVersion: String, additionalVersions: List<String>
+		deps: DependenciesConfig,
+		currentVersion: String,
+		additionalVersions: List<String>,
+		staging: Boolean,
+		acesssToken: String?
 	) = curseforge {
 		projectId = project.prop("publish.curseforge")
-		accessToken = project.providers.environmentVariable("CURSEFORGE_API_KEY").orNull
+		accessToken = acesssToken
 		minecraftVersions.addAll(listOf(currentVersion) + additionalVersions)
 
 		deps.required.forEach { dep -> whenNotNull(dep.curseforge) { requires(it) } }
