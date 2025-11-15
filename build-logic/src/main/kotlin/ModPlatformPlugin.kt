@@ -14,6 +14,8 @@ import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
+import org.gradle.plugins.ide.idea.IdeaPlugin
+import org.gradle.plugins.ide.idea.model.IdeaModel
 import java.util.*
 import javax.inject.Inject
 
@@ -47,11 +49,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 		val stonecutter = extensions.getByType<StonecutterBuildExtension>()
 
-		listOf("java", "me.modmuss50.mod-publish-plugin").forEach { apply(plugin = it) }
+		listOf("java", "me.modmuss50.mod-publish-plugin", "idea").forEach { apply(plugin = it) }
 
 		version = "$modVersion$channelTag+$mcVersion-$loader"
 
 		configureJarTask(modId)
+		configureIdea()
 		configureProcessResources(isFabric, isNeoForge, modId, "$modVersion$channelTag", mcVersion, extension)
 		configureJava(stonecutter)
 		registerBuildAndCollectTask(extension, "$modVersion$channelTag")
@@ -174,6 +177,15 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 	}
 
+	private fun Project.configureIdea() {
+		extensions.configure<IdeaModel>("idea") {
+			module {
+				isDownloadJavadoc = true
+				isDownloadSources = true
+			}
+		}
+	}
+
 	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtensionImpl, modVersion: String) {
 		tasks.register<Copy>("buildAndCollect") {
 			group = "build"
@@ -213,7 +225,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			modLoaders.add(loader)
 
 			displayName =
-				"${prop("mod.name")} $modVersion for $currentVersion ${loader.replaceFirstChar(Char::titlecase)}"
+				"${prop("mod.name")} $modVersion ${loader.replaceFirstChar(Char::titlecase)} $currentVersion"
 
 			modrinth(deps, currentVersion, additionalVersions, testWithStaging)
 			if (!testWithStaging) curseforge(deps, currentVersion, additionalVersions)
