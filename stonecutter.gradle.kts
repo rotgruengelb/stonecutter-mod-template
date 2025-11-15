@@ -8,19 +8,29 @@ plugins {
 }
 
 stonecutter active file(".sc_active_version")
-// stonecutter active "1.21.7-fabric"
-
-stonecutter parameters {
-	constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge")
-	filters.include("**/*.fsh", "**/*.vsh")
-}
 
 for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publish$version") {
 	group = "publishing"
 	dependsOn(stonecutter.tasks.named("publishMods") { metadata.version == version })
 }
 
+stonecutter tasks {
+	val ordering = versionComparator.thenComparingInt { task ->
+		if (task.metadata.project.endsWith("fabric")) 1 else 0
+	}
+
+	listOf("publishModrinth", "publishCurseforge").forEach { taskName ->
+		gradle.allprojects {
+			if (project.tasks.findByName(taskName) != null) {
+				order(taskName, ordering)
+			}
+		}
+	}
+}
+
 stonecutter parameters {
+	constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge")
+	filters.include("**/*.fsh", "**/*.vsh")
 	swaps["mod_version"] = "\"" + property("mod.version") + "\";"
 	swaps["mod_id"] = "\"" + property("mod.id") + "\";"
 	swaps["mod_name"] = "\"" + property("mod.name") + "\";"
