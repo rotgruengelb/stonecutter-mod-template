@@ -182,18 +182,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Publish to CurseForge (if available)
+      - name: Publish to Platforms
         run: |
-          if ./gradlew tasks --all | grep -q "publishCurseforge"; then
-            ./gradlew publishCurseforge --stacktrace
-          else
-            echo "Skipping CurseForge publish, task not found."
-          fi
-
-      - name: Publish to Modrinth (if available)
-        run: |
-          if ./gradlew tasks --all | grep -q "publishModrinth"; then
-            ./gradlew publishModrinth --stacktrace
-          else
-            echo "Skipping Modrinth publish, task not found."
-          fi
+          ./gradlew publishMods --stacktrace
