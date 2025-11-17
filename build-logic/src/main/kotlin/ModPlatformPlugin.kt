@@ -20,6 +20,7 @@ import javax.inject.Inject
 
 fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
 fun Project.env(variable: String): String? = providers.environmentVariable(variable).orNull
+fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCase() == "true"
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
@@ -210,7 +211,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			channelTag.substringAfter('-').substringBefore('.').ifEmpty { "stable" })
 
 		extensions.configure<ModPublishExtension>("publishMods") {
-			val mrStaging = env("TEST_PUBLISHING_WITH_MR_STAGING")?.toDefaultLowerCase() == "true"
+			val mrStaging = envTrue("TEST_PUBLISHING_WITH_MR_STAGING")
 
 			val modrinthAccessToken = env("MODRINTH_API_TOKEN")
 			val curseforgeAccessToken = env("CURSEFORGE_API_KEY")
