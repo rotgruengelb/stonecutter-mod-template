@@ -215,7 +215,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 			val modrinthAccessToken = env("MODRINTH_API_TOKEN")
 			val curseforgeAccessToken = env("CURSEFORGE_API_KEY")
-			if (modrinthAccessToken.isNullOrBlank() || (curseforgeAccessToken.isNullOrBlank() && !mrStaging)) {
+			if (!envTrue("ENABLE_PUBLISHING")) {
 				dryRun = true
 			}
 
