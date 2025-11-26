@@ -1,10 +1,10 @@
 [versions]
 stonecutter = "0.8-alpha.9"
 stonecutter-postprocess = "2.1-beta.8"
-mod-publish = "0.8.4"
+mod-publish = "1.1.0"
 dotenv-gradle = "4.0.0"
 fabric-loom = "1.13.3"
-neoforge-moddev = "2.0.116"
+neoforge-moddev = "2.0.120"
 foojay = "1.0.0"
 fabric-loader= "0.17.3"
 
