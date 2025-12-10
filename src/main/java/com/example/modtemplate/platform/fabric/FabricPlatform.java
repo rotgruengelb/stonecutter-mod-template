@@ -16,5 +16,15 @@ public class FabricPlatform implements Platform {
 	public ModLoader loader() {
 		return ModLoader.FABRIC;
 	}
+
+	@Override
+	public String mcVersion() {
+		return FabricLoader.getInstance().getRawGameVersion();
+	}
+
+	@Override
+	public boolean isDevelopmentEnvironment() {
+		return FabricLoader.getInstance().isDevelopmentEnvironment();
+	}
 }
 //?}

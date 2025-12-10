@@ -1,5 +1,8 @@
 @file:Suppress("unused", "DuplicatedCode")
 
+import dev.kikugie.fletching_table.FletchingTablePlugin
+import dev.kikugie.fletching_table.extension.FletchingTableExtension
+import dev.kikugie.fletching_table.extension.mixin.FTMixinExtension
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension
 import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
@@ -33,6 +36,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			sourcesJarTask.convention(if (inferredLoaderIsFabric) "remapSourcesJar" else "sourcesJar")
 		}
 
+		listOf(
+			"org.jetbrains.kotlin.jvm",
+			"com.google.devtools.ksp",
+			"dev.kikugie.fletching-table"
+		).forEach { apply(plugin = it) }
+
 		afterEvaluate {
 			configureProject(extension)
 		}
@@ -50,10 +59,15 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 		val stonecutter = extensions.getByType<StonecutterBuildExtension>()
 
-		listOf("java", "me.modmuss50.mod-publish-plugin", "idea").forEach { apply(plugin = it) }
+		listOf(
+			"java",
+			"me.modmuss50.mod-publish-plugin",
+			"idea",
+		).forEach { apply(plugin = it) }
 
 		version = "$modVersion$channelTag+$mcVersion-$loader"
 
+		configureFletchingTable()
 		configureJarTask(modId)
 		configureIdea()
 		configureProcessResources(isFabric, isNeoForge, modId, "$modVersion$channelTag", mcVersion, extension)
@@ -183,6 +197,14 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			module {
 				isDownloadJavadoc = true
 				isDownloadSources = true
+			}
+		}
+	}
+
+	private fun Project.configureFletchingTable() {
+		extensions.configure<FletchingTableExtension> {
+			mixins.create("main").apply {
+				mixin("default", "${prop("mod.id")}.mixins.json")
 			}
 		}
 	}

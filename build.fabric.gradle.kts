@@ -21,7 +21,7 @@ platform {
 }
 
 loom {
-	accessWidenerPath = rootProject.file("src/main/resources/${prop("mod.id")}.accesswidener")
+	accessWidenerPath = rootProject.file("src/main/resources/aw/${stonecutter.current.version}.accesswidener")
 	runs.named("client") {
 		client()
 		ideConfigGenerated(true)
@@ -54,5 +54,7 @@ dependencies {
 			if (hasProperty("deps.parchment")) parchment("org.parchmentmc.data:parchment-${prop("deps.parchment")}@zip")
 		})
 	modImplementation(libs.fabric.loader)
+	implementation(libs.moulberry.mixinconstraints)
+	include(libs.moulberry.mixinconstraints)
 	modImplementation("net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric-api")}")
 }

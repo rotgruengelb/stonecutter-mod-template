@@ -6,8 +6,6 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "mixins": [
-    "ExampleMixin"
-  ],
+  "mixins": [],
   "client": []
 }

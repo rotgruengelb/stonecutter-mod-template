@@ -5,6 +5,9 @@ plugins {
 	alias(libs.plugins.neoforged.moddev).apply(false)
 	alias(libs.plugins.jsonlang.postprocess).apply(false)
 	alias(libs.plugins.mod.publish.plugin).apply(false)
+	alias(libs.plugins.kotlin.jvm).apply(false)
+	alias(libs.plugins.devtools.ksp).apply(false)
+	alias(libs.plugins.fletching.table).apply(false)
 }
 
 stonecutter active file(".sc_active_version")

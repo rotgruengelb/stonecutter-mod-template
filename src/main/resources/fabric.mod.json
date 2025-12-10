@@ -21,7 +21,7 @@
   "icon": "assets/icon.png",
   "license": "${license}",
   "environment": "*",
-  "accessWidener": "${id}.accesswidener",
+  "accessWidener": "aw/${minecraft}.accesswidener",
   "entrypoints": {
     "main": [
       "${group}.${id}.platform.fabric.FabricEntrypoint"

@@ -8,13 +8,18 @@ pluginManagement {
 		maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
 		maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
 		maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
+		maven("https://jitpack.io") { name = "Jitpack" }
+		exclusiveContent {
+			forRepository { maven("https://api.modrinth.com/maven") { name = "Modrinth" } }
+			filter { includeGroup("maven.modrinth") }
+		}
 	}
 	includeBuild("build-logic")
 }
 
 plugins {
 	id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-	id("dev.kikugie.stonecutter") version "0.8-alpha.9"
+	id("dev.kikugie.stonecutter") version "0.8-alpha.13"
 }
 
 stonecutter {
