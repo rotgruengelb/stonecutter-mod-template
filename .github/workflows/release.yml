@@ -43,7 +43,7 @@ jobs:
         id: cliff
         uses: orhun/git-cliff-action@v4
         with:
-          args: --latest --strip header --config git-cliff.toml --output CHANGELOG.md
+          args: --latest --strip header --output CHANGELOG.md
           version: 'v2.10.1'
 
       - name: Read gradle.properties values
