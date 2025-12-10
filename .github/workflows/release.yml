@@ -37,7 +37,7 @@ jobs:
       - name: Prepare git-cliff
         run: |
           REPO_URL="https://github.com/${{ github.repository }}"
-          sed -i "s|%%%repo_url%%%|${REPO_URL}|g" git-cliff.toml
+          sed -i "s|%%%repo_url%%%|${REPO_URL}|g" cliff.toml
 
       - name: Generate changelog with git-cliff
         id: cliff
