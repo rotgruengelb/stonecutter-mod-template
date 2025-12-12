@@ -66,9 +66,9 @@ postprocessors = [
 # See https://www.conventionalcommits.org
 conventional_commits = true
 # Exclude commits that do not match the conventional commits specification.
-filter_unconventional = true
+filter_unconventional = false
 # Split commits on newlines, treating each line as an individual commit.
-split_commits = false
+split_commits = true
 # An array of regex based parsers to modify commit messages prior to further processing.
 commit_preprocessors = [
 	# Replace issue numbers with link templates to be updated in `changelog.postprocessors`.
@@ -88,6 +88,10 @@ commit_parsers = [
 	{ message = "^test", group = "Tests" },
 	{ message = "^chore", group = "Chores" },
 	{ body = ".*security", group = "Security" },
+	{ message = ".*\\((ci|cd|dx)(/.*)?\\).*", group = "Development/Tooling" },
+
+	# Fallback
+	{ message = ".*", group = "Other" },
 ]
 # Exclude commits that are not matched by any commit parser.
 filter_commits = false
