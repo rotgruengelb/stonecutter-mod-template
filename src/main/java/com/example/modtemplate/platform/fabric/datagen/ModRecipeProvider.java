@@ -1,6 +1,6 @@
 package com.example.modtemplate.platform.fabric.datagen;
 
-//? fabric {
+//? fabric && != 1.19.2 {
 
 import com.example.modtemplate.ModTemplate;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;

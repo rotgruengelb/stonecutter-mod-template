@@ -1,10 +1,12 @@
 @file:Suppress("unused")
 
 import org.gradle.api.Action
+import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.compile.JavaCompile
 import javax.inject.Inject
 
 fun NamedDomainObjectContainer<Dependency>.add(modid: String, configure: Action<Dependency>) {
@@ -22,6 +24,7 @@ fun NamedDomainObjectContainer<Dependency>.add(
 
 
 interface ModPlatformExtension {
+	val requiredJava: Property<JavaVersion>
 	val loader: Property<String>
 	val jarTask: Property<String>
 	val sourcesJarTask: Property<String>
@@ -91,6 +94,7 @@ abstract class DependencyImpl @Inject constructor(
 
 abstract class ModPlatformExtensionImpl @Inject constructor(project: Project) : ModPlatformExtension {
 	private val objects = project.objects
+	override val requiredJava: Property<JavaVersion> = objects.property(JavaVersion::class.java).convention(JavaVersion.VERSION_21)
 	override val loader: Property<String> = objects.property(String::class.java)
 	override val jarTask: Property<String> = objects.property(String::class.java)
 	override val sourcesJarTask: Property<String> = objects.property(String::class.java)

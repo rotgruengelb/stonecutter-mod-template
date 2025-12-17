@@ -31,5 +31,4 @@ mod-publish-plugin = { id = "me.modmuss50.mod-publish-plugin", version.ref = "mo
 devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "devtools-ksp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-jvm" }
 fletching-table = { id = "dev.kikugie.fletching-table", version.ref = "fletching-table" }
-
-
+legacyforge-moddev = { id = "net.neoforged.moddev.legacyforge", version.ref = "neoforge-moddev" }

@@ -1,8 +1,6 @@
 @file:Suppress("unused", "DuplicatedCode")
 
-import dev.kikugie.fletching_table.FletchingTablePlugin
 import dev.kikugie.fletching_table.extension.FletchingTableExtension
-import dev.kikugie.fletching_table.extension.mixin.FTMixinExtension
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension
 import me.modmuss50.mpp.ModPublishExtension
 import me.modmuss50.mpp.ReleaseType
@@ -13,8 +11,11 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.JavaExec
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -51,6 +52,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		val loader = extension.loader.get()
 		val isFabric = loader == "fabric"
 		val isNeoForge = loader == "neoforge"
+		val isForge = loader == "forge"
 
 		val modId = prop("mod.id")
 		val modVersion = prop("mod.version")
@@ -67,11 +69,24 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 		version = "$modVersion$channelTag+$mcVersion-$loader"
 
+		extension.requiredJava.set(
+			when {
+				stonecutter.eval(stonecutter.current.version, ">=1.20.6") -> JavaVersion.VERSION_21
+				stonecutter.eval(stonecutter.current.version, ">=1.18") -> JavaVersion.VERSION_17
+				stonecutter.eval(stonecutter.current.version, ">=1.17") -> JavaVersion.VERSION_16
+				else -> JavaVersion.VERSION_1_8
+			}
+		)
+
+		if (isFabric) {
+			extension.dependencies { required("java") { versionRange = ">=${extension.requiredJava.get().majorVersion}" } }
+		}
+
 		configureFletchingTable()
 		configureJarTask(modId)
 		configureIdea()
-		configureProcessResources(isFabric, isNeoForge, modId, "$modVersion$channelTag", mcVersion, extension)
-		configureJava(stonecutter)
+		configureProcessResources(isFabric, isNeoForge, isForge, modId, "$modVersion$channelTag", mcVersion, extension, extension.requiredJava.get())
+		configureJava(stonecutter, extension.requiredJava.get())
 		registerBuildAndCollectTask(extension, "$modVersion$channelTag")
 		configurePublishing(extension, loader, stonecutter, "$modVersion$channelTag", channelTag, version.toString())
 	}
@@ -85,13 +100,18 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	private fun Project.configureProcessResources(
 		isFabric: Boolean,
 		isNeoForge: Boolean,
+		isForge: Boolean,
 		modId: String,
 		modVersion: String,
 		mcVersion: String,
-		extension: ModPlatformExtensionImpl
+		extension: ModPlatformExtensionImpl,
+		requiredJava: JavaVersion
 	) {
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"))
+
+			filesMatching("*.mixins.json") { expand("java" to "JAVA_${requiredJava.majorVersion}") }
+
 			var contributors = prop("mod.contributors")
 			var authors = prop("mod.authors")
 			var issuesUrl = prop("mod.issues_url")
@@ -124,12 +144,17 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			when {
 				isFabric -> {
 					filesMatching("fabric.mod.json") { expand(props) }
-					exclude("META-INF/neoforge.mods.toml", "META-INF/accesstransformer.cfg", ".cache")
+					exclude("META-INF/mods.toml", "META-INF/neoforge.mods.toml", "aw/*.cfg", ".cache", "pack.mcmeta")
 				}
 
 				isNeoForge -> {
 					filesMatching("META-INF/neoforge.mods.toml") { expand(props) }
-					exclude("fabric.mod.json", "${modId}.accesswidener", ".cache")
+					exclude("META-INF/mods.toml", "fabric.mod.json", "aw/*.accesswidener", ".cache", "pack.mcmeta")
+				}
+
+				isForge-> {
+					filesMatching("META-INF/mods.toml") { expand(props) }
+					exclude("META-INF/neoforge.mods.toml", "fabric.mod.json", "aw/*.accesswidener", ".cache")
 				}
 			}
 		}
@@ -168,6 +193,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 						modId = "${it.modid.get()}"
 						side = "${it.environment.get().uppercase(Locale.getDefault())}"
                         versionRange = "${it.forgeVersionRange.get()}"
+						mandatory = ${if (type == "required") "true" else "false"}
                         type = "$type"
 						""".replace("                  ", "").trimIndent()
 					)
@@ -180,15 +206,11 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 	}
 
-	private fun Project.configureJava(stonecutter: StonecutterBuildExtension) {
+	private fun Project.configureJava(stonecutter: StonecutterBuildExtension, requiredJava: JavaVersion) {
 		extensions.configure<JavaPluginExtension>("java") {
 			withSourcesJar()
-			val javaVersion = if (stonecutter.eval(
-					stonecutter.current.version, ">=1.21"
-				)
-			) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-			sourceCompatibility = javaVersion
-			targetCompatibility = javaVersion
+			sourceCompatibility = requiredJava
+			targetCompatibility = requiredJava
 		}
 	}
 

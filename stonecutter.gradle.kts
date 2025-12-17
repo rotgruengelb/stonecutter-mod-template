@@ -8,6 +8,7 @@ plugins {
 	alias(libs.plugins.kotlin.jvm).apply(false)
 	alias(libs.plugins.devtools.ksp).apply(false)
 	alias(libs.plugins.fletching.table).apply(false)
+	alias(libs.plugins.legacyforge.moddev).apply(false)
 }
 
 stonecutter active file(".sc_active_version")
@@ -32,7 +33,7 @@ stonecutter tasks {
 }
 
 stonecutter parameters {
-	constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge")
+	constants.match(node.metadata.project.substringAfterLast('-'), "fabric", "neoforge", "forge")
 	filters.include("**/*.fsh", "**/*.vsh")
 	swaps["mod_version"] = "\"" + property("mod.version") + "\";"
 	swaps["mod_id"] = "\"" + property("mod.id") + "\";"
