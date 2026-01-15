@@ -1,5 +1,7 @@
 @file:Suppress("unused", "DuplicatedCode")
 
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import dev.kikugie.commons.collections.getOrThrow
 import dev.kikugie.fletching_table.extension.FletchingTableExtension
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension
 import me.modmuss50.mpp.ModPublishExtension
@@ -8,14 +10,13 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.dsl.RepositoryHandler
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.JavaExec
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -23,8 +24,23 @@ import java.util.*
 import javax.inject.Inject
 
 fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
+
 fun Project.env(variable: String): String? = providers.environmentVariable(variable).orNull
+
 fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCase() == "true"
+
+fun RepositoryHandler.strictMaven(
+	url: String, vararg groups: String, configure: MavenArtifactRepository.() -> Unit = {}
+) = exclusiveContent {
+	forRepository {
+		maven(url) {
+			configure()
+		}
+	}
+	filter {
+		groups.forEach(::includeGroup)
+	}
+}
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
@@ -38,9 +54,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 
 		listOf(
-			"org.jetbrains.kotlin.jvm",
-			"com.google.devtools.ksp",
-			"dev.kikugie.fletching-table"
+			"org.jetbrains.kotlin.jvm", "com.google.devtools.ksp", "dev.kikugie.fletching-table"
 		).forEach { apply(plugin = it) }
 
 		afterEvaluate {
@@ -50,9 +64,6 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 	private fun Project.configureProject(extension: ModPlatformExtensionImpl) {
 		val loader = extension.loader.get()
-		val isFabric = loader == "fabric"
-		val isNeoForge = loader == "neoforge"
-		val isForge = loader == "forge"
 
 		val modId = prop("mod.id")
 		val modVersion = prop("mod.version")
@@ -67,7 +78,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			"idea",
 		).forEach { apply(plugin = it) }
 
-		version = "$modVersion$channelTag+$mcVersion-$loader"
+		val isSnapshot = !envTrue("MOD_IS_RELEASE")
+
+		val baseVersion = "$modVersion$channelTag"
+		val snapshotSuffix = if (isSnapshot) "-SNAPSHOT" else ""
+		version = "$baseVersion-$loader+$mcVersion$snapshotSuffix"
+		val basicVersion = "$baseVersion$snapshotSuffix"
 
 		extension.requiredJava.set(
 			when {
@@ -78,17 +94,86 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			}
 		)
 
-		if (isFabric) {
-			extension.dependencies { required("java") { versionRange = ">=${extension.requiredJava.get().majorVersion}" } }
+		if (loader == "fabric" || loader == "quilt") {
+			extension.dependencies {
+				required("java") {
+					versionRange = ">=${extension.requiredJava.get().majorVersion}"
+				}
+			}
 		}
 
 		configureFletchingTable()
 		configureJarTask(modId, loader)
 		configureIdea()
-		configureProcessResources(isFabric, isNeoForge, isForge, modId, "$modVersion$channelTag", mcVersion, extension, extension.requiredJava.get())
+		configureProcessResources(
+			loader,
+			modId,
+			"$modVersion$channelTag",
+			mcVersion,
+			extension)
 		configureJava(stonecutter, extension.requiredJava.get())
-		registerBuildAndCollectTask(extension, "$modVersion$channelTag")
-		configurePublishing(extension, loader, stonecutter, "$modVersion$channelTag", channelTag, version.toString())
+		registerBuildAndCollectTask(extension, baseVersion)
+		configurePublishing(extension, loader, stonecutter, basicVersion, channelTag, version.toString())
+		if (envTrue("PUB_MAVEN_ENABLE")) {
+			configureMavenPublishing(isSnapshot)
+		}
+	}
+
+
+	private fun Project.configureMavenPublishing(
+		isSnapshot: Boolean
+	) {
+		env("PUB_MAVEN_USERNAME_MAVEN_CENTRAL")?.let {
+			extensions.extraProperties["mavenCentralUsername"] = it
+		}
+
+		env("PUB_MAVEN_PASSWORD_MAVEN_CENTRAL")?.let {
+			extensions.extraProperties["mavenCentralPassword"] = it
+		}
+
+		extensions.configure<MavenPublishBaseExtension>("mavenPublishing") {
+			if (envTrue("PUB_MAVEN_ENABLE_MAVEN_CENTRAL")) {
+				if (!isSnapshot || envTrue("PUB_MAVEN_ENABLE_MAVEN_CENTRAL_SNAPSHOT")) {
+					publishToMavenCentral()
+				}
+			}
+			signAllPublications()
+
+			coordinates("${prop("mod.group")}.${prop("mod.id")}", prop("mod.id"), version as String)
+			pom {
+				name.set(prop("mod.name"))
+				description.set(prop("mod.description"))
+				inceptionYear.set(prop("mod.inception_year"))
+				url.set(prop("mod.homepage_url"))
+				licenses {
+					license {
+						name.set(prop("mod.license.name"))
+						url.set(prop("mod.license.url"))
+						distribution.set(prop("mod.license.dist"))
+					}
+				}
+				developers {
+					val developerIds = prop("mod.pom.developer.ids").split(",")
+					val developerNames = prop("mod.pom.developer.names").split(",")
+					val developerUrls = prop("mod.pom.developer.urls").split(",")
+
+					for (i in developerIds.indices) {
+						developer {
+							id.set(developerIds[i].trim())
+							name.set(developerNames.getOrThrow(i) { "mod.pom.developer.names is not the same size as mod.pom.developer.ids" }
+								.trim())
+							url.set(developerUrls.getOrThrow(i) { "mod.pom.developer.urls is not the same size as mod.pom.developer.ids" }
+								.trim())
+						}
+					}
+				}
+				scm {
+					url.set(prop("mod.sources_url"))
+					connection.set(scmConnectionFromUrl(prop("mod.sources_url")))
+					developerConnection.set(scmDeveloperConnectionFromUrl(prop("mod.sources_url")))
+				}
+			}
+		}
 	}
 
 	private fun Project.configureJarTask(modId: String, loader: String) {
@@ -105,15 +190,17 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.configureProcessResources(
-		isFabric: Boolean,
-		isNeoForge: Boolean,
-		isForge: Boolean,
+		loader: String,
 		modId: String,
 		modVersion: String,
 		mcVersion: String,
 		extension: ModPlatformExtensionImpl,
-		requiredJava: JavaVersion
 	) {
+		val requiredJava = extension.requiredJava.get()
+		val isFabric = loader == "fabric"
+		val isNeoForge = loader == "neoforge"
+		val isForge = loader == "forge"
+
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"))
 			dependsOn("kspKotlin")
@@ -240,10 +327,13 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			mixins.create("main").apply {
 				mixin("default", "${prop("mod.id")}.mixins.json")
 			}
+			j52j.register("main") {
+				extension("json", "**/*.json5")
+			}
 		}
 	}
 
-	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtensionImpl, modVersion: String) {
+	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtensionImpl, modBasicVersion: String) {
 		tasks.register<Copy>("buildAndCollect") {
 			group = "build"
 			from(
@@ -260,7 +350,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		ext: ModPlatformExtensionImpl,
 		loader: String,
 		stonecutter: StonecutterBuildExtension,
-		modVersion: String,
+		modBasicVersion: String,
 		channelTag: String,
 		fullVersion: String,
 	) {
@@ -291,7 +381,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			changelog.set(rootProject.file("CHANGELOG.md").readText())
 			modLoaders.add(loader)
 
-			displayName = "${prop("mod.name")} $modVersion ${loader.replaceFirstChar(Char::titlecase)} $currentVersion"
+			displayName = "${prop("mod.name")} $modBasicVersion ${loader.replaceFirstChar(Char::titlecase)} $currentVersion"
 
 			modrinth(deps, currentVersion, additionalVersions, mrStaging, modrinthAccessToken)
 			if (!mrStaging) curseforge(deps, currentVersion, additionalVersions, false, curseforgeAccessToken)
@@ -339,3 +429,9 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		deps.embeds.forEach { dep -> whenNotNull(dep.curseforge) { embeds(it) } }
 	}
 }
+
+private fun scmConnectionFromUrl(scmUrl: String): String =
+	scmUrl.replace("https://", "scm:git:git://").removeSuffix("/") + ".git"
+
+private fun scmDeveloperConnectionFromUrl(scmUrl: String): String =
+	scmUrl.replace("https://", "scm:git:ssh://git@").removeSuffix("/") + ".git"

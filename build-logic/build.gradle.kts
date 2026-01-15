@@ -28,4 +28,5 @@ dependencies {
 	implementation(libs.mod.publish.plugin)
 	implementation(libs.foojay.resolver)
 	implementation(libs.fletching.table)
+	implementation(libs.vanniktech.maven.publish)
 }
