@@ -8,14 +8,13 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.dsl.RepositoryHandler
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.JavaExec
 import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
-import org.gradle.jvm.toolchain.JavaLanguageVersion
-import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -23,8 +22,23 @@ import java.util.*
 import javax.inject.Inject
 
 fun Project.prop(name: String): String = (findProperty(name) ?: "") as String
+
 fun Project.env(variable: String): String? = providers.environmentVariable(variable).orNull
+
 fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCase() == "true"
+
+fun RepositoryHandler.strictMaven(
+	url: String, vararg groups: String, configure: MavenArtifactRepository.() -> Unit = {}
+) = exclusiveContent {
+	forRepository {
+		maven(url) {
+			configure()
+		}
+	}
+	filter {
+		groups.forEach(::includeGroup)
+	}
+}
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
@@ -251,7 +265,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 				tasks.named(extension.sourcesJarTask.get()),
 				tasks.named("javadocJar").get()
 			)
-			into(rootProject.layout.buildDirectory.file("libs/$modBasicVersion"))
+			into(rootProject.layout.buildDirectory.file("libs/$modVersion"))
 			dependsOn("build")
 		}
 	}
