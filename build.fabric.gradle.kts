@@ -40,10 +40,16 @@ loom {
 }
 
 fabricApi {
-	configureDataGeneration() {
+	configureDataGeneration {
 		outputDirectory = file("${rootDir}/versions/datagen/${stonecutter.current.version.split("-")[0]}/src/main/generated")
 		client = true
 	}
+}
+
+repositories {
+	mavenCentral()
+	strictMaven("https://maven.terraformersmc.com/", "com.terraformersmc") { name = "TerraformersMC" }
+	strictMaven("https://api.modrinth.com/maven", "maven.modrinth") { name = "Modrinth" }
 }
 
 dependencies {
@@ -57,5 +63,12 @@ dependencies {
 	implementation(libs.moulberry.mixinconstraints)
 	include(libs.moulberry.mixinconstraints)
 	modImplementation("net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric-api")}")
-	//modLocalRuntime("com.terraformersmc:modmenu:${prop("deps.modmenu")}")
+	modLocalRuntime("com.terraformersmc:modmenu:${prop("deps.modmenu")}")
+}
+
+stonecutter {
+	replacements.string(current.parsed >= "1.21.11") {
+		replace("ResourceLocation", "Identifier")
+		replace("location()", "identifier()")
+	}
 }

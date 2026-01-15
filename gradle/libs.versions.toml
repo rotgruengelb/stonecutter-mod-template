@@ -1,9 +1,9 @@
 [versions]
-stonecutter = "0.8-alpha.13"
+stonecutter = "0.8"
 stonecutter-postprocess = "2.1-beta.8"
 mod-publish = "1.1.0"
 dotenv-gradle = "4.0.0"
-fabric-loom = "1.13.3"
+fabric-loom = "1.14-SNAPSHOT"
 neoforge-moddev = "2.0.120"
 foojay = "1.0.0"
 fabric-loader = "0.17.3"
@@ -11,6 +11,8 @@ devtools-ksp = "2.2.10-2.0.2"
 kotlin-jvm = "2.2.10"
 fletching-table = "0.1.0-alpha.22"
 moulberry-mixinconstraints = "1.1.0"
+vanniktech-maven-publish = "0.35.0"
+mixin = "0.8.5"
 
 [libraries]
 kikugie-postprocess = { module = "dev.kikugie:postprocess", version.ref = "stonecutter-postprocess" }

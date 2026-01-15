@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.register
-
 plugins {
 	id("mod-platform")
 	id("net.neoforged.moddev.legacyforge")
@@ -42,13 +40,25 @@ legacyForge {
 
 
 	mods {
-		register(property("mod.id") as String) {
+		register(prop("mod.id")) {
 			sourceSet(sourceSets["main"])
 		}
 	}
 }
 
+mixin {
+	add(sourceSets.main.get(), "${prop("mod.id")}.mixins.refmap.json")
+	config("${prop("mod.id")}.mixins.json")
+}
+
+repositories {
+	mavenCentral()
+	strictMaven("https://api.modrinth.com/maven", "maven.modrinth") { name = "Modrinth" }
+}
+
 dependencies {
+	annotationProcessor("org.spongepowered:mixin:${libs.versions.mixin.get()}:processor")
+
 	implementation(libs.moulberry.mixinconstraints)
 	jarJar(libs.moulberry.mixinconstraints)
 }
@@ -63,4 +73,8 @@ sourceSets {
 
 tasks.named("createMinecraftArtifacts") {
 	dependsOn(tasks.named("stonecutterGenerate"))
+}
+
+stonecutter {
+
 }

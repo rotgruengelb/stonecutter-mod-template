@@ -83,7 +83,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 
 		configureFletchingTable()
-		configureJarTask(modId)
+		configureJarTask(modId, loader)
 		configureIdea()
 		configureProcessResources(isFabric, isNeoForge, isForge, modId, "$modVersion$channelTag", mcVersion, extension, extension.requiredJava.get())
 		configureJava(stonecutter, extension.requiredJava.get())
@@ -91,9 +91,16 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		configurePublishing(extension, loader, stonecutter, "$modVersion$channelTag", channelTag, version.toString())
 	}
 
-	private fun Project.configureJarTask(modId: String) {
+	private fun Project.configureJarTask(modId: String, loader: String) {
+		val isForge = loader == "forge"
+
 		tasks.withType<Jar>().configureEach {
 			archiveBaseName.set(modId)
+			if (isForge) {
+				manifest.attributes(
+					"MixinConfigs" to "mixins.mymod.json"
+				)
+			}
 		}
 	}
 
@@ -109,6 +116,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	) {
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"))
+			dependsOn("kspKotlin")
 
 			filesMatching("*.mixins.json") { expand("java" to "JAVA_${requiredJava.majorVersion}") }
 
@@ -152,7 +160,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 					exclude("META-INF/mods.toml", "fabric.mod.json", "aw/*.accesswidener", ".cache", "pack.mcmeta")
 				}
 
-				isForge-> {
+				isForge -> {
 					filesMatching("META-INF/mods.toml") { expand(props) }
 					exclude("META-INF/neoforge.mods.toml", "fabric.mod.json", "aw/*.accesswidener", ".cache")
 				}
@@ -209,8 +217,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	private fun Project.configureJava(stonecutter: StonecutterBuildExtension, requiredJava: JavaVersion) {
 		extensions.configure<JavaPluginExtension>("java") {
 			withSourcesJar()
+			withJavadocJar()
 			sourceCompatibility = requiredJava
 			targetCompatibility = requiredJava
+			toolchain {
+				version = requiredJava
+			}
 		}
 	}
 
@@ -234,8 +246,12 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtensionImpl, modVersion: String) {
 		tasks.register<Copy>("buildAndCollect") {
 			group = "build"
-			from(tasks.named(extension.jarTask.get()))
-			into(rootProject.layout.buildDirectory.file("libs/$modVersion"))
+			from(
+				tasks.named(extension.jarTask.get()),
+				tasks.named(extension.sourcesJarTask.get()),
+				tasks.named("javadocJar").get()
+			)
+			into(rootProject.layout.buildDirectory.file("libs/$modBasicVersion"))
 			dependsOn("build")
 		}
 	}
