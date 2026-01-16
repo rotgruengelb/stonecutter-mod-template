@@ -183,7 +183,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			archiveBaseName.set(modId)
 			if (isForge) {
 				manifest.attributes(
-					"MixinConfigs" to "mixins.mymod.json"
+					"MixinConfigs" to "mixins.${modId}.json"
 				)
 			}
 		}
@@ -307,9 +307,6 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			withJavadocJar()
 			sourceCompatibility = requiredJava
 			targetCompatibility = requiredJava
-			toolchain {
-				version = requiredJava
-			}
 		}
 	}
 
