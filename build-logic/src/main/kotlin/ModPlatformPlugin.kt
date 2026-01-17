@@ -30,14 +30,8 @@ fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCa
 fun RepositoryHandler.strictMaven(
 	url: String, vararg groups: String, configure: MavenArtifactRepository.() -> Unit = {}
 ) = exclusiveContent {
-	forRepository {
-		maven(url) {
-			configure()
-		}
-	}
-	filter {
-		groups.forEach(::includeGroup)
-	}
+	forRepository { maven(url) { configure() } }
+	filter { groups.forEach(::includeGroup) }
 }
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
@@ -45,7 +39,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		val inferredLoader = project.buildFile.name.substringAfter('.').replace(".gradle.kts", "")
 		val inferredLoaderIsFabric = inferredLoader == "fabric"
 
-		val extension = extensions.create("platform", ModPlatformExtensionImpl::class.java).apply {
+		val extension = extensions.create("platform", ModPlatformExtension::class.java).apply {
 			loader.convention(inferredLoader)
 			jarTask.convention(if (inferredLoaderIsFabric) "remapJar" else "jar")
 			sourcesJarTask.convention(if (inferredLoaderIsFabric) "remapSourcesJar" else "sourcesJar")
@@ -62,7 +56,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 	}
 
-	private fun Project.configureProject(extension: ModPlatformExtensionImpl) {
+	private fun Project.configureProject(extension: ModPlatformExtension) {
 		val loader = extension.loader.get()
 		val isFabric = loader == "fabric"
 		val isNeoForge = loader == "neoforge"
@@ -112,7 +106,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			archiveBaseName.set(modId)
 			if (isForge) {
 				manifest.attributes(
-					"MixinConfigs" to "mixins.${modId}.json"
+					"MixinConfigs" to "${modId}.mixins.json"
 				)
 			}
 		}
@@ -125,7 +119,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		modId: String,
 		modVersion: String,
 		mcVersion: String,
-		extension: ModPlatformExtensionImpl,
+		extension: ModPlatformExtension,
 		requiredJava: JavaVersion
 	) {
 		tasks.named<ProcessResources>("processResources") {
@@ -254,7 +248,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 	}
 
-	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtensionImpl, modVersion: String) {
+	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtension, modVersion: String) {
 		tasks.register<Copy>("buildAndCollect") {
 			group = "build"
 			from(
@@ -268,7 +262,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.configurePublishing(
-		ext: ModPlatformExtensionImpl,
+		ext: ModPlatformExtension,
 		loader: String,
 		stonecutter: StonecutterBuildExtension,
 		modVersion: String,
