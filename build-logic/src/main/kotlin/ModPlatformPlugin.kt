@@ -32,14 +32,8 @@ fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCa
 fun RepositoryHandler.strictMaven(
 	url: String, vararg groups: String, configure: MavenArtifactRepository.() -> Unit = {}
 ) = exclusiveContent {
-	forRepository {
-		maven(url) {
-			configure()
-		}
-	}
-	filter {
-		groups.forEach(::includeGroup)
-	}
+	forRepository { maven(url) { configure() } }
+	filter { groups.forEach(::includeGroup) }
 }
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
@@ -47,14 +41,16 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		val inferredLoader = project.buildFile.name.substringAfter('.').replace(".gradle.kts", "")
 		val inferredLoaderIsFabric = inferredLoader == "fabric"
 
-		val extension = extensions.create("platform", ModPlatformExtensionImpl::class.java).apply {
+		val extension = extensions.create("platform", ModPlatformExtension::class.java).apply {
 			loader.convention(inferredLoader)
 			jarTask.convention(if (inferredLoaderIsFabric) "remapJar" else "jar")
 			sourcesJarTask.convention(if (inferredLoaderIsFabric) "remapSourcesJar" else "sourcesJar")
 		}
 
 		listOf(
-			"org.jetbrains.kotlin.jvm", "com.google.devtools.ksp", "dev.kikugie.fletching-table"
+			"org.jetbrains.kotlin.jvm",
+			"com.google.devtools.ksp",
+			"dev.kikugie.fletching-table"
 		).forEach { apply(plugin = it) }
 
 		afterEvaluate {
@@ -62,7 +58,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 	}
 
-	private fun Project.configureProject(extension: ModPlatformExtensionImpl) {
+	private fun Project.configureProject(extension: ModPlatformExtension) {
 		val loader = extension.loader.get()
 
 		val modId = prop("mod.id")
@@ -97,7 +93,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		if (loader == "fabric" || loader == "quilt") {
 			extension.dependencies {
 				required("java") {
-					versionRange = ">=${extension.requiredJava.get().majorVersion}"
+					fabricLikeVersionRange = ">=${extension.requiredJava.get().majorVersion}"
 				}
 			}
 		}
@@ -110,7 +106,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			modId,
 			"$modVersion$channelTag",
 			mcVersion,
-			extension)
+			extension
+			)
 		configureJava(stonecutter, extension.requiredJava.get())
 		registerBuildAndCollectTask(extension, baseVersion)
 		configurePublishing(extension, loader, stonecutter, basicVersion, channelTag, version.toString())
@@ -183,7 +180,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			archiveBaseName.set(modId)
 			if (isForge) {
 				manifest.attributes(
-					"MixinConfigs" to "mixins.${modId}.json"
+					"MixinConfigs" to "${modId}.mixins.json"
 				)
 			}
 		}
@@ -194,7 +191,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		modId: String,
 		modVersion: String,
 		mcVersion: String,
-		extension: ModPlatformExtensionImpl,
+		extension: ModPlatformExtension,
 	) {
 		val requiredJava = extension.requiredJava.get()
 		val isFabric = loader == "fabric"
@@ -264,7 +261,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			): String? {
 				if (container.isEmpty()) return null
 				val entries = container.joinToString(",\n    ") {
-					"\"${it.modid.get()}\": \"${it.versionRange.get()}\""
+					"\"${it.modid.get()}\": \"${it.fabricLikeVersionRange.get()}\""
 				}
 				return "\n  \"$name\": {\n    $entries\n  }"
 			}
@@ -287,7 +284,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 						[[dependencies.$modId]]
 						modId = "${it.modid.get()}"
 						side = "${it.environment.get().uppercase(Locale.getDefault())}"
-                        versionRange = "${it.forgeVersionRange.get()}"
+                        versionRange = "${it.forgeLikeVersionRange.get()}"
 						mandatory = ${if (type == "required") "true" else "false"}
                         type = "$type"
 						""".replace("                  ", "").trimIndent()
@@ -330,7 +327,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		}
 	}
 
-	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtensionImpl, modBasicVersion: String) {
+	private fun Project.registerBuildAndCollectTask(extension: ModPlatformExtension, modBasicVersion: String) {
 		tasks.register<Copy>("buildAndCollect") {
 			group = "build"
 			from(
@@ -344,7 +341,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.configurePublishing(
-		ext: ModPlatformExtensionImpl,
+		ext: ModPlatformExtension,
 		loader: String,
 		stonecutter: StonecutterBuildExtension,
 		modBasicVersion: String,

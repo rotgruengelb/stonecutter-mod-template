@@ -7,18 +7,20 @@ platform {
 	loader = "fabric"
 	dependencies {
 		required("minecraft") {
-			versionRange = prop("deps.minecraft")
+			fabricLikeVersionRange = prop("deps.minecraft")
 		}
 		required("fabric-api") {
 			slug("fabric-api")
-			versionRange = ">=${prop("deps.fabric-api")}"
+			fabricLikeVersionRange = ">=${prop("deps.fabric-api")}"
 		}
 		required("fabricloader") {
-			versionRange = ">=${libs.fabric.loader.get().version}"
+			fabricLikeVersionRange = ">=${libs.fabric.loader.get().version}"
 		}
 		optional("modmenu") {}
 	}
 }
+
+versionCatalogs.named("")
 
 loom {
 	accessWidenerPath = rootProject.file("src/main/resources/aw/${stonecutter.current.version}.accesswidener")

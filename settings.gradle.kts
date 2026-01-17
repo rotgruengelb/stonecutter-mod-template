@@ -8,11 +8,6 @@ pluginManagement {
 		maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
 		maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
 		maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
-		maven("https://maven.terraformersmc.com/") { name = "TerraformersMC" }
-		exclusiveContent {
-			forRepository { maven("https://api.modrinth.com/maven") { name = "Modrinth" } }
-			filter { includeGroup("maven.modrinth") }
-		}
 	}
 	includeBuild("build-logic")
 }

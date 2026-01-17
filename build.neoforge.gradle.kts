@@ -7,10 +7,10 @@ platform {
 	loader = "neoforge"
 	dependencies {
 		required("minecraft") {
-			forgeVersionRange = "[${prop("deps.minecraft")}]"
+			forgeLikeVersionRange = "[${prop("deps.minecraft")}]"
 		}
 		required("neoforge") {
-			forgeVersionRange = "[1,)"
+			forgeLikeVersionRange = "[1,)"
 		}
 	}
 }
