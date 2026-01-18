@@ -20,8 +20,6 @@ platform {
 	}
 }
 
-versionCatalogs.named("")
-
 loom {
 	accessWidenerPath = rootProject.file("src/main/resources/aw/${stonecutter.current.version}.accesswidener")
 	runs.named("client") {
