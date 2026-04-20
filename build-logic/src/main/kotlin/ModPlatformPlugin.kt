@@ -127,7 +127,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			archiveBaseName.set(modId)
 			if (isForge) {
 				manifest.attributes(
-					"MixinConfigs" to "${modId}.mixins.json"
+					"MixinConfigs" to "${modId}.mixins.json",
+					"FMLAT" to "accesstransformer.cfg"
 				)
 			}
 		}
@@ -143,6 +144,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		extension: ModPlatformExtension,
 		requiredJava: JavaVersion
 	) {
+		val stonecutter = extensions.getByType<StonecutterBuildExtension>()
+
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"))
 			dependsOn("kspKotlin")
@@ -158,6 +161,16 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 					"java" to "JAVA_${requiredJava.majorVersion}",
 					"refmap" to refmapLine
 				)
+			}
+
+			if (isForge) {
+				val atFile = rootProject.file("src/main/resources/aw/${stonecutter.current.version}.cfg")
+				if (atFile.exists()) {
+					from(atFile) {
+						into("META-INF")
+						rename { "accesstransformer.cfg" }
+					}
+				}
 			}
 
 			var contributors = prop("mod.contributors")
