@@ -142,10 +142,61 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	private fun Project.configureProcessResources(ctx: Context) {
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"), "kspKotlin")
-			filesMatching("*.mixins.json") {
-				expand("java" to "JAVA_${ctx.javaVersion.majorVersion}")
+
+			val mcVersion = ctx.stonecutter.current.version.split("-")[0]
+			val mixinsExt = project.extensions.findByType<MixinsExtension>()
+
+			if (mixinsExt != null && mixinsExt.hasAnyMixins()) {
+				val commonMixins = resolveMixinsForVersion(mixinsExt.common, mcVersion, ctx.stonecutter)
+				val clientMixins = resolveMixinsForVersion(mixinsExt.client, mcVersion, ctx.stonecutter)
+				val serverMixins = resolveMixinsForVersion(mixinsExt.server, mcVersion, ctx.stonecutter)
+
+				val commonArray = commonMixins.toMixinJsonArray()
+				val clientArray = clientMixins.toMixinJsonArray()
+				val serverArray = serverMixins.toMixinJsonArray()
+
+				logMixinConfiguration(
+					logger = project.logger,
+					mcVersion = mcVersion,
+					commonCount = commonMixins.size,
+					clientCount = clientMixins.size,
+					serverCount = serverMixins.size
+				)
+
+				processMixinFiles(ctx, mapOf(
+					"java" to "JAVA_${ctx.javaVersion.majorVersion}",
+					"common_array" to commonArray,
+					"client_array" to clientArray,
+					"server_array" to serverArray
+				))
+
+				inputs.property("mcVersion", mcVersion)
+				inputs.property("commonMixins", commonArray)
+				inputs.property("clientMixins", clientArray)
+				inputs.property("serverMixins", serverArray)
+			} else {
+				processMixinFiles(ctx, mapOf(
+					"java" to "JAVA_${ctx.javaVersion.majorVersion}"
+				))
 			}
+
 			exclude(ctx.loader.excludedResources)
+		}
+	}
+
+	private fun ProcessResources.processMixinFiles(ctx: Context, expansionMap: Map<String, String>) {
+		filesMatching("*.mixins.json") {
+			expand(expansionMap)
+
+			if (ctx.loader is Loader.Forge) {
+				filter { line ->
+					if (line.contains("\"package\"") && line.trim().endsWith(",")) {
+						line + "\n    \"refmap\": \"${ctx.modId}.mixins.refmap.json\","
+					} else {
+						line
+					}
+				}
+			}
 		}
 	}
 
