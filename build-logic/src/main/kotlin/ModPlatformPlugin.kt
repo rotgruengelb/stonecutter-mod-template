@@ -67,6 +67,8 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			sourcesJarTask.convention(inferredLoader.sourcesJarTask)
 		}
 
+		extensions.create("mixins", MixinsExtension::class.java)
+		
 		listOf("org.jetbrains.kotlin.jvm", "com.google.devtools.ksp", "dev.kikugie.fletching-table").forEach {
 			apply(
 				plugin = it
