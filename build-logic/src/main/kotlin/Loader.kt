@@ -9,7 +9,7 @@ import net.peanuuutz.tomlkt.Toml
 import org.gradle.api.NamedDomainObjectContainer
 import java.util.*
 
-private val JSON = Json { prettyPrint = true; encodeDefaults = true }
+private val JSON = Json { prettyPrint = true; encodeDefaults = true; explicitNulls = false }
 private val TOML = Toml { }
 
 sealed class Loader(val id: String) {
@@ -38,10 +38,12 @@ sealed class Loader(val id: String) {
 				contact = mapOf(
 					"sources" to ctx.sourcesUrl, "issues" to ctx.issuesUrl, "homepage" to ctx.homepageUrl
 				),
-				custom = buildJsonObject {
-					putJsonObject("modmenu") {
-						putJsonObject("links") {
-							put("modmenu.discord", ctx.discordUrl)
+				custom = ctx.discordUrl.takeIf { it.isNotEmpty() }?.let { url ->
+					buildJsonObject {
+						putJsonObject("modmenu") {
+							putJsonObject("links") {
+								put("modmenu.discord", url)
+							}
 						}
 					}
 				},
@@ -105,7 +107,9 @@ sealed class Loader(val id: String) {
 			addDeps(ctx.extension.dependencies.incompatible, "incompatible")
 
 			val manifest = ForgeManifest(
-				license = ctx.licenseName, issueTrackerURL = ctx.issuesUrl, mods = listOf(
+				license = ctx.licenseName,
+				issueTrackerURL = ctx.issuesUrl,
+				mods = listOf(
 					ForgeMod(
 						modId = ctx.modId,
 						displayName = ctx.modName,
@@ -117,7 +121,9 @@ sealed class Loader(val id: String) {
 						credits = "${ctx.authors.joinToString(", ")} Contributors: ${ctx.contributors.joinToString(", ")}",
 						description = ctx.description
 					)
-				), dependencies = mapOf(ctx.modId to forgeDeps), mixins = listOf(ForgeMixin("${ctx.modId}.mixins.json")),
+				),
+				dependencies = mapOf(ctx.modId to forgeDeps),
+				mixins = listOf(ForgeMixin("${ctx.modId}.mixins.json")),
 				accessTransformers = listOf(ForgeAccessTransformer("aw/${ctx.stonecutter.current.version}.cfg"))
 			)
 
