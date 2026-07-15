@@ -1,6 +1,6 @@
 plugins {
 	id("mod-platform")
-	id("net.fabricmc.fabric-loom")
+	id("dev.kikugie.loom-back-compat")
 }
 
 stonecutter {
@@ -17,7 +17,7 @@ stonecutter {
 }
 
 platform {
-	loader = "fabric-m"
+	loader = "fabric"
 	dependencies {
 		required("minecraft") {
 			fabricLikeVersionRange = prop("deps.minecraft")
@@ -34,7 +34,7 @@ platform {
 }
 
 loom {
-	accessWidenerPath = rootProject.file("src/main/resources/aw/${stonecutter.current.version}.accesswidener")
+	accessWidenerPath = rootProject.file("src/main/resources/aw/${sc.current.version}.accesswidener")
 	runs.named("client") {
 		client()
 		ideConfigGenerated(true)
@@ -65,11 +65,24 @@ repositories {
 	strictMaven("https://api.modrinth.com/maven", "maven.modrinth") { name = "Modrinth" }
 }
 
+configurations.all {
+	resolutionStrategy {
+		force("net.fabricmc:fabric-loader:${prop("deps.fabric-loader")}")
+	}
+}
+
 dependencies {
 	minecraft("com.mojang:minecraft:${prop("deps.minecraft")}")
-	implementation("net.fabricmc:fabric-loader:${prop("deps.fabric-loader")}")
+	if (sc.current.parsed < "26") {
+		mappings(loom.layered {
+			officialMojangMappings()
+			if (hasProperty("deps.parchment"))
+				parchment("org.parchmentmc.data:parchment-${prop("deps.parchment")}@zip")
+		})
+	}
+	modImplementation("net.fabricmc:fabric-loader:${prop("deps.fabric-loader")}")
 	// implementation(libs.moulberry.mixinconstraints)
 	// include(libs.moulberry.mixinconstraints)
-	implementation("net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric-api")}")
-	localRuntime("com.terraformersmc:modmenu:${prop("deps.modmenu")}")
+	modImplementation("net.fabricmc.fabric-api:fabric-api:${prop("deps.fabric-api")}")
+	modLocalRuntime("com.terraformersmc:modmenu:${prop("deps.modmenu")}")
 }

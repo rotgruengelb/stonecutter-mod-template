@@ -1,3 +1,5 @@
+loomx.loom_version="1.16-SNAPSHOT"
+
 mod.id = "modtemplate"
 mod.name = "Mod Template"
 mod.group = "com.example"

@@ -13,8 +13,6 @@ private val JSON = Json { prettyPrint = true; encodeDefaults = true; explicitNul
 private val TOML = Toml { }
 
 sealed class Loader(val id: String) {
-	abstract val jarTask: String
-	abstract val sourcesJarTask: String
 	abstract val modManifestPath: String
 	abstract val excludedResources: List<String>
 
@@ -22,8 +20,9 @@ sealed class Loader(val id: String) {
 
 	abstract fun generateManifest(ctx: Context): String
 
-	sealed class FabricLike(id: String) : Loader(id) {
+	object Fabric : Loader("fabric") {
 		override val isFabricLike = true
+		override val modManifestPath = "fabric.mod.json"
 		override val excludedResources = listOf(
 			"META-INF/mods.toml", "META-INF/neoforge.mods.toml", "aw/*.cfg", ".cache", "pack.mcmeta"
 		)
@@ -66,21 +65,7 @@ sealed class Loader(val id: String) {
 		}
 	}
 
-	object FabricM : FabricLike("fabric") {
-		override val jarTask = "jar"
-		override val sourcesJarTask = "sourcesJar"
-		override val modManifestPath = "fabric.mod.json"
-	}
-
-	object FabricO : FabricLike("fabric") {
-		override val jarTask = "remapJar"
-		override val sourcesJarTask = "remapSourcesJar"
-		override val modManifestPath = "fabric.mod.json"
-	}
-
 	sealed class ForgeLike(id: String) : Loader(id) {
-		override val jarTask = "jar"
-		override val sourcesJarTask = "sourcesJar"
 		override val excludedResources = listOf(
 			"fabric.mod.json", "aw/*.accesswidener", ".cache"
 		)
@@ -140,13 +125,11 @@ sealed class Loader(val id: String) {
 		override val modManifestPath = "META-INF/mods.toml"
 		override val excludedResources = super.excludedResources + "META-INF/neoforge.mods.toml"
 		val mixinConfigAttribute = "MixinConfigs"
-		override val jarTask = "reobfJar"
 	}
 
 	companion object {
 		fun of(id: String): Loader = when (id) {
-			"fabric-o" -> FabricO
-			"fabric-m" -> FabricM
+			"fabric" -> Fabric
 			"neoforge" -> NeoForge
 			"forge" -> Forge
 			else -> error("Unknown loader: '$id'")

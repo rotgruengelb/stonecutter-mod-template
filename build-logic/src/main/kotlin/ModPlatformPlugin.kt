@@ -60,8 +60,25 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 		val extension = extensions.create("platform", ModPlatformExtension::class.java).apply {
 			loader.convention(inferredLoader.id)
-			jarTask.convention(inferredLoader.jarTask)
-			sourcesJarTask.convention(inferredLoader.sourcesJarTask)
+		}
+
+		when (inferredLoader) {
+			is Loader.Fabric -> {
+				extension.jarTask.convention(providers.provider {
+					extensions.getByType<dev.kikugie.loomx.LoomCompatProjectExtension>().modJar.name
+				})
+				extension.sourcesJarTask.convention(providers.provider {
+					extensions.getByType<dev.kikugie.loomx.LoomCompatProjectExtension>().modSourcesJar.name
+				})
+			}
+			is Loader.Forge -> {
+				extension.jarTask.convention("reobfJar")
+				extension.sourcesJarTask.convention("sourcesJar")
+			}
+			else -> {
+				extension.jarTask.convention("jar")
+				extension.sourcesJarTask.convention("sourcesJar")
+			}
 		}
 
 		listOf("org.jetbrains.kotlin.jvm", "com.google.devtools.ksp", "dev.kikugie.fletching-table").forEach {
@@ -126,11 +143,6 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 		the<JavaPluginExtension>().sourceSets.named("main") { resources.srcDir(manifestOutputDir) }
 		tasks.named<ProcessResources>("processResources") { dependsOn(generateTask) }
-		tasks.withType<Jar>().configureEach {
-			if (name == ctx.loader.sourcesJarTask) {
-				dependsOn(generateTask)
-			}
-		}
 	}
 
 	private fun Project.configureProcessResources(ctx: Context) {

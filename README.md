@@ -139,7 +139,7 @@ mod hosting platforms.
 
 ```kotlin
 platform {
-  loader = "fabric-m" // or "neoforge" / "forge" / "fabric-o" for old minecraft versions that require loom-remap 
+  loader = "fabric" // or "neoforge" / "forge"
   dependencies {
     required("my-lib") {
       slug("my-lib") // Mod hosting platform slug (here the slug is the same on both Modrinth and CurseForge)
