@@ -253,6 +253,17 @@ For help and support, consider the following places:
 - ["The NeoForge Project" Discord Server](https://github.com/neoforged) for NeoForge-related questions.
 - ["The Fabric Project" Discord Server](https://discord.gg/v6v4pMv) for Fabric-related questions.
 
+# Thanks
+
+- @Paulem78 for fixes and adding versioned datagen (PR #1; #2)
+- @TheOfficialSeri for version updates (PR #3)
+- @cheyao for fixing Modmenu in 1.21.1 (PR #4)
+- @DevHrytsan for a fix regarding Legacy Forge Jars in publishing (PR #6)
+- @RazorPlay01 for a fix and adding 26+ support (PR #8)
+- @SoundsoftheSun for a fix regarding ATs in (Neo)Forge (PR #12)
+- @doonv for fixing Discord URLs and Java version selection as well as adding unified 
+Fabric buildscripts (PR #13; #14; #15)
+
 ## License/Credits
 
 This template is provided under the MIT License.
