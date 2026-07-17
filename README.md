@@ -255,7 +255,7 @@ For help and support, consider the following places:
 
 # Thanks
 
-- @Paulem78 for fixes and adding versioned datagen (PR #1; #2)
+- @Paulem79 for fixes and adding versioned datagen (PR #1; #2)
 - @TheOfficialSeri for version updates (PR #3)
 - @cheyao for fixing Modmenu in 1.21.1 (PR #4)
 - @DevHrytsan for a fix regarding Legacy Forge Jars in publishing (PR #6)
