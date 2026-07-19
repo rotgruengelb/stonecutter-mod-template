@@ -47,9 +47,12 @@ bin/
 .DS_Store
 
 ### Jetbrains ###
-.idea/
+.idea/*
 !.idea/icon.png
 !.idea/externalDependencies.xml
 !.idea/icon.svg
+
+!.idea/runConfigurations
+.idea/runConfigurations/*
 !.idea/runConfigurations/Run_Active_Client.xml
 !.idea/runConfigurations/Run_Active_Server.xml
