@@ -165,7 +165,7 @@ The current setup uses Fabric data generation for all platforms to keep everythi
 ### Environment Variables
 
 Copy `.env.template` to `.env` and fill in the values for local publishing. The `.env` file is loaded automatically by
-the `dotenv-gradle` plugin. When using the CI, set the corresponding repository secrets and variables instead
+the build script. When using the CI, set the corresponding repository secrets and variables instead
 (see [Using the CI](#using-the-ci)).
 
 Note: When using the CI `MOD_IS_RELEASE` is managed automatically, it is set by the CI based on the workflow trigger and

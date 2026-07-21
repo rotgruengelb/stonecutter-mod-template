@@ -20,6 +20,7 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import java.util.Properties
 import javax.inject.Inject
 
 val Project.sc: StonecutterBuildExtension
@@ -28,8 +29,12 @@ val Project.sc: StonecutterBuildExtension
 @OptIn(StonecutterExperimentalAPI::class)
 fun Project.prop(name: String): String = (project.sc.properties.get<String>(name))
 
-fun Project.env(variable: String): String? = providers.environmentVariable(variable).orNull
-
+fun Project.env(variable: String): String? {
+	providers.environmentVariable(variable).orNull?.let { return it }
+	return rootProject.file(".env").takeIf { it.exists() }?.let { f ->
+		Properties().apply { f.inputStream().use(::load) }.getProperty(variable)
+	}
+}
 fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCase() == "true"
 
 fun RepositoryHandler.strictMaven(
