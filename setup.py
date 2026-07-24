@@ -90,6 +90,11 @@ def validate_group(value: str):
         )
 
 
+def validate_environment(value: str):
+    if value.lower() not in ["client", "server", "both"]:
+        abort("Environment must be 'client', 'server', or 'both'.")
+
+
 # file helpers
 
 
@@ -163,6 +168,9 @@ discord_url = ask("Discord invite URL", optional=True)
 modrinth_id = ask("Modrinth project ID", optional=True)
 curseforge_id = ask("CurseForge project ID", optional=True)
 
+mod_environment = ask("Environment (client/server/both)", default="both")
+validate_environment(mod_environment)
+
 old_pkg = "com/example/modtemplate"
 new_pkg = mod_group.replace(".", "/") + f"/{mod_id}"
 old_java_pkg = "com.example.modtemplate"
@@ -175,6 +183,7 @@ print(f"  mod.name     = {mod_name}")
 print(f"  mod.group    = {mod_group}")
 print(f"  mod.version  = {mod_version}{channel_tag}")
 print(f"  authors      = {to_toml_array(authors)}")
+print(f"  environment  = {mod_environment}")
 print(f"  package path = {new_pkg}")
 print()
 confirm = ask("Proceed? [Y/n]", default="Y")
@@ -216,6 +225,7 @@ mod.sources_url = "{sources_url}"
 mod.homepage_url = "{homepage_url}"
 mod.issues_url = "{issues_url}"
 mod.discord_url = "{discord_url}"
+mod.environment = "{mod_environment}"
 {pom_devs}
 
 {versions_section}"""
