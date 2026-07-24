@@ -16,6 +16,7 @@ mod.sources_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
 mod.homepage_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
 mod.issues_url = "https://github.com/rotgruengelb/stonecutter-mod-template/issues"
 mod.discord_url = "https://discord.gg/aunYJB4wz9"
+mod.environment = "both"   #"client", "server", "both"
 [[mod.pom.developers]]
 id = "authorname"
 name = "AuthorName"
