@@ -1,5 +1,5 @@
 [versions]
-stonecutter = "0.9.2"
+stonecutter = "0.9.7"
 stonecutter-postprocess = "2.1-beta.8"
 mod-publish = "2.1.1"
 loomx = "0.4.1"

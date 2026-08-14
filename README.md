@@ -175,13 +175,13 @@ does not need to be set manually.
 |-------------------------------|----------------------------------------------------------------------------|----------|
 | `PUB_DRY_RUN`                 | Set to `true` to simulate publishing without actually uploading            | Variable |
 | `PUB_MODS_ENABLE`             | Set to `true` to enable publishing to Modrinth and CurseForge              | Variable |
+| `PUB_GITHUB_RELEASES`         | Set to `true` to publish GitHub releases                                   | Variable |
 | `PUB_MAVEN_ENABLE`            | Set to `true` to enable Maven publishing                                   | Variable |
 | `PUB_MAVEN_CENTRAL_ENABLE`    | Set to `true` to publish to Maven Central                                  | Variable |
 | `PUB_MAVEN_CENTRAL_SNAPSHOTS` | Set to `true` to also publish snapshot versions to Maven Central           | Variable |
 | `PUB_MODRINTH_STAGING`        | Set to `true` to publish to the Modrinth staging API instead of production | Variable |
 | `PUB_MODRINTH_PROJECT_ID`     | Your Modrinth project ID                                                   | Variable |
 | `PUB_CURSEFORGE_PROJECT_ID`   | Your CurseForge project ID                                                 | Variable |
-| `PUB_GITHUB_RELEASES`         | Set to `true` to publish GitHub releases on tag push (CI only!)            | Variable |
 | `PUB_MODRINTH_TOKEN`          | Your Modrinth personal access token                                        | Secret   |
 | `PUB_CURSEFORGE_TOKEN`        | Your CurseForge API token                                                  | Secret   |
 | `PUB_MAVEN_CENTRAL_USERNAME`  | Your Maven Central (Sonatype) username                                     | Secret   |

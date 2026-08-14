@@ -2,8 +2,6 @@
 
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.ReleaseType
-import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
 import org.gradle.jvm.tasks.Jar
@@ -39,6 +37,7 @@ fun Project.configureMavenPublishing(ctx: Context) {
 			}
 			developers {
 				project.sc.properties.raw("mod.pom.developers").asList().forEach { devNode ->
+
 					val dev = devNode.asMap()
 					developer {
 						id.set(dev["id"]?.toString())
@@ -59,20 +58,20 @@ fun Project.configureMavenPublishing(ctx: Context) {
 }
 
 fun Project.configureModPublishing(ctx: Context) {
-	val releaseType = ReleaseType.of(
-		ctx.channelTag.substringAfter('-').substringBefore('.').ifEmpty { "stable" })
+	val releaseType = releaseTypeFromChannelTag(ctx.channelTag)
 
 	extensions.configure<ModPublishExtension>("publishMods") {
 		val mrStaging = envTrue("PUB_MODRINTH_STAGING")
 		val modrinthAccessToken = env("PUB_MODRINTH_TOKEN")
 		val curseforgeAccessToken = env("PUB_CURSEFORGE_TOKEN")
 
+		val githubEnabled = envTrue("PUB_GITHUB_RELEASES")
 		if (envTrue("PUB_DRY_RUN") || !envTrue("PUB_MODS_ENABLE")) {
 			dryRun = true
 		}
 
-		val jarTask = tasks.named(ctx.extension.jarTask.get()).map { it as Jar }
-		val srcJarTask = tasks.named(ctx.extension.sourcesJarTask.get()).map { it as Jar }
+		val jarTask = ctx.extension.jarTask.flatMap { name -> tasks.named(name).map { it as Jar } }
+		val srcJarTask = ctx.extension.sourcesJarTask.flatMap { name -> tasks.named(name).map { it as Jar } }
 
 		file.set(jarTask.flatMap(Jar::getArchiveFile))
 		additionalFiles.from(srcJarTask.flatMap(Jar::getArchiveFile))
@@ -84,50 +83,67 @@ fun Project.configureModPublishing(ctx: Context) {
 		displayName =
 			"${ctx.modName} ${ctx.basicVersion} ${ctx.loader.id.replaceFirstChar(Char::titlecase)} ${ctx.currentMcVersion}"
 
-		val deps = ctx.extension.dependencies
+		if (githubEnabled) {
+			github {
+				accessToken = env("GITHUB_TOKEN")
+				parent(rootProject.tasks.named("publishGithub"))
+			}
 
-		modrinth(ctx, ctx.publishAdditionalVersions, mrStaging, modrinthAccessToken, deps)
-		if (!mrStaging) curseforge(ctx, ctx.publishAdditionalVersions, curseforgeAccessToken, deps)
+			// The root task creates the release and writes the result file that children read at
+			// execution time, so children must run after it. MPP's parent() only copies the
+			// result provider without declaring a dependency, which would race under `org.gradle.parallel`.
+			project.tasks.named("publishGithub").configure {
+				dependsOn(rootProject.tasks.named("publishGithub"))
+			}
+		}
+
+		modrinth(ctx, ctx.publishAdditionalVersions, mrStaging, modrinthAccessToken)
+		if (!mrStaging) curseforge(ctx, ctx.publishAdditionalVersions, curseforgeAccessToken)
 	}
 }
 
 private fun ModPublishExtension.modrinth(
-	ctx: Context, additionalVersions: List<String>, staging: Boolean, accessToken: String?, deps: DependenciesConfig
+	ctx: Context, additionalVersions: List<String>, staging: Boolean, accessToken: String?
 ) = modrinth {
 	if (staging) apiEndpoint = "https://staging-api.modrinth.com/v2"
 
+	environment = ctx.environment
 	projectId = project.env("PUB_MODRINTH_PROJECT_ID")
-	environment = when (ctx.environment.lowercase()) {
-		"client" -> ModrinthEnvironment.CLIENT_ONLY
-		"server" -> ModrinthEnvironment.SERVER_ONLY
-		else -> ModrinthEnvironment.CLIENT_AND_SERVER
-	}
 
 	this.accessToken = accessToken
 	minecraftVersions.addAll(listOf(ctx.currentMcVersion) + additionalVersions)
 
 	if (!staging) {
-		deps.required.forEach { dep -> whenNotNull(dep.modrinth) { requires(it) } }
-		deps.optional.forEach { dep -> whenNotNull(dep.modrinth) { optional(it) } }
-		deps.incompatible.forEach { dep -> whenNotNull(dep.modrinth) { incompatible(it) } }
-		deps.embeds.forEach { dep -> whenNotNull(dep.modrinth) { embeds(it) } }
+		val platform = this
+		project.afterEvaluate {
+			val deps = ctx.extension.dependencies
+			deps.required.forEach { dep -> whenNotNull(dep.modrinth) { platform.requires(it) } }
+			deps.optional.forEach { dep -> whenNotNull(dep.modrinth) { platform.optional(it) } }
+			deps.incompatible.forEach { dep -> whenNotNull(dep.modrinth) { platform.incompatible(it) } }
+			deps.embeds.forEach { dep -> whenNotNull(dep.modrinth) { platform.embeds(it) } }
+		}
 	}
 }
 
 private fun ModPublishExtension.curseforge(
-	ctx: Context, additionalVersions: List<String>, accessToken: String?, deps: DependenciesConfig
+	ctx: Context, additionalVersions: List<String>, accessToken: String?
 ) = curseforge {
 	projectId = project.env("PUB_CURSEFORGE_PROJECT_ID")
-	client = ctx.environment.lowercase() in setOf("client", "both")
-	server = ctx.environment.lowercase() in setOf("server", "both")
+
+	client = ctx.environmentPhysicalClient
+	server = ctx.environmentPhysicalServer
 
 	this.accessToken = accessToken
 	minecraftVersions.addAll(listOf(ctx.currentMcVersion) + additionalVersions)
 
-	deps.required.forEach { dep -> whenNotNull(dep.curseforge) { requires(it) } }
-	deps.optional.forEach { dep -> whenNotNull(dep.curseforge) { optional(it) } }
-	deps.incompatible.forEach { dep -> whenNotNull(dep.curseforge) { incompatible(it) } }
-	deps.embeds.forEach { dep -> whenNotNull(dep.curseforge) { embeds(it) } }
+	val platform = this
+	project.afterEvaluate {
+		val deps = ctx.extension.dependencies
+		deps.required.forEach { dep -> whenNotNull(dep.curseforge) { platform.requires(it) } }
+		deps.optional.forEach { dep -> whenNotNull(dep.curseforge) { platform.optional(it) } }
+		deps.incompatible.forEach { dep -> whenNotNull(dep.curseforge) { platform.incompatible(it) } }
+		deps.embeds.forEach { dep -> whenNotNull(dep.curseforge) { platform.embeds(it) } }
+	}
 }
 
 private fun whenNotNull(stringProp: Property<String>, action: (String) -> Unit) {

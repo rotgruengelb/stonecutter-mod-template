@@ -3,4 +3,30 @@ on: [ push, pull_request ]
 
 jobs:
   build:
-    uses: ./.github/workflows/build_reusable.yml
+    name: Build Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: 'microsoft'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+
+      - name: Build with Gradle
+        run: ./gradlew buildAndCollect --no-daemon
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/libs/

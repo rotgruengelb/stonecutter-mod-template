@@ -9,15 +9,15 @@ permissions:
   contents: write
 
 jobs:
-  validate:
-    name: Validate Tag
+  release:
+    name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
+    env:
+      MOD_IS_RELEASE: true
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -25,46 +25,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          TAG="${GITHUB_REF_NAME#v}"
           VERSION=$(grep '^mod\.version' stonecutter.properties.toml | cut -d'"' -f2)
           CHANNEL_TAG=$(grep '^mod\.channel_tag' stonecutter.properties.toml | cut -d'"' -f2)
           FULL_VERSION="${VERSION}${CHANNEL_TAG}"
 
           echo "Validating tag '$TAG' against version '$FULL_VERSION'..."
           if [[ "$TAG" != "$FULL_VERSION" ]]; then
-            echo "::error::Tag '$TAG' does not match version '$FULL_VERSION' in gradle.properties."
+            echo "::error::Tag '$TAG' does not match version '$FULL_VERSION' in stonecutter.properties.toml."
 
-            if gh release view "$TAG" &>/dev/null; then
-              echo "Deleting GitHub release for $TAG..."
-              gh release delete "$TAG" -y
+            if gh release view "$GITHUB_REF_NAME" &>/dev/null; then
+              echo "Deleting GitHub release for $GITHUB_REF_NAME..."
+              gh release delete "$GITHUB_REF_NAME" -y
             fi
 
-            git push origin ":refs/tags/$TAG"
+            git push origin ":refs/tags/$GITHUB_REF_NAME"
             exit 1
           fi
           echo "✓ Tag matches version."
-
-  build:
-    needs: validate
-    uses: ./.github/workflows/build_reusable.yml
-    with:
-      release: true
-
-  prepare:
-    name: Prepare Release
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: write
-
-    outputs:
-      publish_github: ${{ steps.check.outputs.publish_github }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Prepare git-cliff
         run: |
@@ -75,120 +53,7 @@ jobs:
         uses: orhun/git-cliff-action@v4
         with:
           args: --latest --strip header --output CHANGELOG.md
-          version: 'v2.10.1'
-
-      - name: Check GitHub releases toggle
-        id: check
-        run: |
-          if [[ "${{ vars.PUB_GITHUB_RELEASES }}" == "true" ]]; then
-            echo "publish_github=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "publish_github=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Upload changelog
-        uses: actions/upload-artifact@v4
-        with:
-          name: changelog
-          path: CHANGELOG.md
-
-  github-release:
-    name: Release to GitHub
-    runs-on: ubuntu-latest
-    needs: prepare
-    if: needs.prepare.outputs.publish_github == 'true'
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-          path: build/libs/
-
-      - name: Download changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: .
-
-      - name: Create or update GitHub release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          echo "Creating or updating release for $TAG"
-          # Try to create the release first
-          if ! gh release create "$TAG" \
-            --title "$TAG" \
-            --notes-file CHANGELOG.md \
-            --latest \
-            --verify-tag \
-            ./build/libs/$TAG/*; then
-
-            echo "Release already exists. Updating existing release..."
-
-            # Update release notes and mark as latest
-            gh release edit "$TAG" \
-              --title "$TAG" \
-              --notes-file CHANGELOG.md \
-              --latest
-
-            # Re-upload artifacts (delete first to avoid duplicates)
-            for FILE in ./build/libs/$TAG/*; do
-              NAME=$(basename "$FILE")
-              gh release delete-asset "$TAG" "$NAME" -y || true
-              gh release upload "$TAG" "$FILE" --clobber
-            done
-          fi
-
-  platform-release:
-    name: Release to Platforms
-    runs-on: ubuntu-latest
-    needs: prepare
-    continue-on-error: true
-
-    env:
-      MOD_IS_RELEASE: true
-      PUB_DRY_RUN: ${{ vars.PUB_DRY_RUN }}
-      PUB_MODS_ENABLE: ${{ vars.PUB_MODS_ENABLE }}
-      PUB_MAVEN_ENABLE: ${{ vars.PUB_MAVEN_ENABLE }}
-      PUB_MAVEN_CENTRAL_ENABLE: ${{ vars.PUB_MAVEN_CENTRAL_ENABLE }}
-      PUB_MAVEN_CENTRAL_SNAPSHOTS: ${{ vars.PUB_MAVEN_CENTRAL_SNAPSHOTS }}
-      PUB_MODRINTH_STAGING: ${{ vars.PUB_MODRINTH_STAGING }}
-      PUB_MODRINTH_PROJECT_ID: ${{ vars.PUB_MODRINTH_PROJECT_ID }}
-      PUB_CURSEFORGE_PROJECT_ID: ${{ vars.PUB_CURSEFORGE_PROJECT_ID }}
-      PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
-      PUB_CURSEFORGE_TOKEN: ${{ secrets.PUB_CURSEFORGE_TOKEN }}
-      PUB_SIGNING_KEY: ${{ secrets.PUB_SIGNING_KEY }}
-      PUB_SIGNING_ID: ${{ secrets.PUB_SIGNING_ID }}
-      PUB_SIGNING_PASSWORD: ${{ secrets.PUB_SIGNING_PASSWORD }}
-      PUB_MAVEN_CENTRAL_USERNAME: ${{ secrets.PUB_MAVEN_CENTRAL_USERNAME }}
-      PUB_MAVEN_CENTRAL_PASSWORD: ${{ secrets.PUB_MAVEN_CENTRAL_PASSWORD }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-          path: build/libs/
-
-      - name: Download changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-          path: .
+          version: 'v2.13.1'
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -198,18 +63,24 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: wrapper
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-
-      - name: Publish to Platforms
+      - name: Build and publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUB_GITHUB_RELEASES: ${{ vars.PUB_GITHUB_RELEASES }}
+          PUB_DRY_RUN: ${{ vars.PUB_DRY_RUN }}
+          PUB_MODS_ENABLE: ${{ vars.PUB_MODS_ENABLE }}
+          PUB_MAVEN_ENABLE: ${{ vars.PUB_MAVEN_ENABLE }}
+          PUB_MAVEN_CENTRAL_ENABLE: ${{ vars.PUB_MAVEN_CENTRAL_ENABLE }}
+          PUB_MAVEN_CENTRAL_SNAPSHOTS: ${{ vars.PUB_MAVEN_CENTRAL_SNAPSHOTS }}
+          PUB_MODRINTH_STAGING: ${{ vars.PUB_MODRINTH_STAGING }}
+          PUB_MODRINTH_PROJECT_ID: ${{ vars.PUB_MODRINTH_PROJECT_ID }}
+          PUB_CURSEFORGE_PROJECT_ID: ${{ vars.PUB_CURSEFORGE_PROJECT_ID }}
+          PUB_MODRINTH_TOKEN: ${{ secrets.PUB_MODRINTH_TOKEN }}
+          PUB_CURSEFORGE_TOKEN: ${{ secrets.PUB_CURSEFORGE_TOKEN }}
+          PUB_SIGNING_KEY: ${{ secrets.PUB_SIGNING_KEY }}
+          PUB_SIGNING_ID: ${{ secrets.PUB_SIGNING_ID }}
+          PUB_SIGNING_PASSWORD: ${{ secrets.PUB_SIGNING_PASSWORD }}
+          PUB_MAVEN_CENTRAL_USERNAME: ${{ secrets.PUB_MAVEN_CENTRAL_USERNAME }}
+          PUB_MAVEN_CENTRAL_PASSWORD: ${{ secrets.PUB_MAVEN_CENTRAL_PASSWORD }}
         run: ./gradlew publishMods --stacktrace

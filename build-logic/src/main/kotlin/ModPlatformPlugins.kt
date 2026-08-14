@@ -1,8 +1,8 @@
 @file:Suppress("unused", "DuplicatedCode")
 
 import dev.kikugie.fletching_table.extension.FletchingTableExtension
-import dev.kikugie.stonecutter.StonecutterExperimentalAPI
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension
+import dev.kikugie.stonecutter.controller.StonecutterControllerExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -20,13 +20,14 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.*
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import me.modmuss50.mpp.ModPublishExtension
+import me.modmuss50.mpp.ReleaseType
 import java.util.Properties
 import javax.inject.Inject
 
 val Project.sc: StonecutterBuildExtension
 	get() = extensions.getByType<StonecutterBuildExtension>()
 
-@OptIn(StonecutterExperimentalAPI::class)
 fun Project.prop(name: String): String = (project.sc.properties.get<String>(name))
 
 fun Project.env(variable: String): String? {
@@ -35,7 +36,11 @@ fun Project.env(variable: String): String? {
 		Properties().apply { f.inputStream().use(::load) }.getProperty(variable)
 	}
 }
+
 fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCase() == "true"
+
+fun releaseTypeFromChannelTag(channelTag: String): ReleaseType =
+	ReleaseType.of(channelTag.substringAfter('-').substringBefore('.').ifEmpty { "stable" })
 
 fun RepositoryHandler.strictMaven(
 	url: String, vararg groups: String, configure: MavenArtifactRepository.() -> Unit = {}
@@ -76,37 +81,42 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 					extensions.getByType<dev.kikugie.loomx.LoomCompatProjectExtension>().modSourcesJar.name
 				})
 			}
+
 			is Loader.Forge -> {
 				extension.jarTask.convention("reobfJar")
 				extension.sourcesJarTask.convention("sourcesJar")
 			}
+
 			else -> {
 				extension.jarTask.convention("jar")
 				extension.sourcesJarTask.convention("sourcesJar")
 			}
 		}
 
-		listOf("org.jetbrains.kotlin.jvm", "com.google.devtools.ksp", "dev.kikugie.fletching-table").forEach {
+		listOf(
+			"org.jetbrains.kotlin.jvm",
+			"com.google.devtools.ksp",
+			"dev.kikugie.fletching-table",
+			"me.modmuss50.mod-publish-plugin"
+		).forEach {
 			apply(
 				plugin = it
 			)
 		}
 
-		afterEvaluate {
-			val ctx = Context(
-				project = this,
-				extension = extension,
-				loader = Loader.of(extension.loader.get()),
-				stonecutter = project.sc
-			)
-			configureProject(ctx)
-		}
+		val ctx = Context(
+			project = this,
+			extension = extension,
+			loader = Loader.of(extension.loader.get()),
+			stonecutter = project.sc
+		)
+		configureProject(ctx)
 	}
 
 	private fun Project.configureProject(ctx: Context) {
-		listOf("java", "me.modmuss50.mod-publish-plugin", "idea").forEach { apply(plugin = it) }
-
 		version = ctx.fullVersion
+
+		listOf("java", "idea").forEach { apply(plugin = it) }
 		ctx.extension.requiredJava.set(ctx.javaVersion)
 
 		if (ctx.loader.isFabricLike) {
@@ -197,6 +207,56 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			into(rootProject.layout.buildDirectory.file("libs/${ctx.basicVersion}"))
 			dependsOn("build")
 			group = "build"
+		}
+	}
+}
+
+class RootPlatformPlugin : Plugin<Project> {
+	override fun apply(project: Project) {
+		with(project) {
+			val stonecutter = extensions.getByType<StonecutterControllerExtension>()
+			val properties = stonecutter.properties
+			val modVersion = properties.get<String>("mod.version")
+			val channelTag = properties.get<String>("mod.channel_tag")
+			val changelogText = file("CHANGELOG.md").takeIf { it.exists() }?.readText() ?: ""
+			val githubToken = providers.environmentVariable("GITHUB_TOKEN")
+
+			extensions.configure<ModPublishExtension>("publishMods") {
+				dryRun = envTrue("PUB_DRY_RUN") || !envTrue("PUB_GITHUB_RELEASES")
+				version = modVersion
+				changelog.set(changelogText)
+				type = releaseTypeFromChannelTag(channelTag)
+				if (envTrue("PUB_GITHUB_RELEASES")) {
+					github {
+						accessToken = githubToken
+						repository = providers.environmentVariable("GITHUB_REPOSITORY")
+						commitish = providers.environmentVariable("GITHUB_SHA").orElse("main")
+						tagName = providers.environmentVariable("GITHUB_REF_NAME")
+						allowEmptyFiles = true
+					}
+				}
+			}
+
+			stonecutter.tasks {
+				order("publishModrinth")
+				order("publishCurseforge")
+			}
+
+			tasks.register("runActiveClient") {
+				group = "stonecutter"
+				description = "Run client of the active Stonecutter version"
+				dependsOn(stonecutter.current!!.project + ":runClient")
+			}
+			tasks.register("runActiveServer") {
+				group = "stonecutter"
+				description = "Run server of the active Stonecutter version"
+				dependsOn(stonecutter.current!!.project + ":runServer")
+			}
+
+			for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publish$version") {
+				group = "publishing"
+				dependsOn(stonecutter.tasks.named("publishMods") { metadata.version == version })
+			}
 		}
 	}
 }

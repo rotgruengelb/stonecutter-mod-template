@@ -91,8 +91,8 @@ def validate_group(value: str):
 
 
 def validate_environment(value: str):
-    if value.lower() not in ["client", "server", "both"]:
-        abort("Environment must be 'client', 'server', or 'both'.")
+    if value.lower() not in ["client_only", "server_only", "dedicated_server_only", "client_and_server", "server_only_client_optional", "client_only_server_optional", "client_or_server_prefers_both", "client_or_server", "singleplayer_only"]:
+        abort("Environment must one of: client_only, server_only, dedicated_server_only, client_and_server, server_only_client_optional, client_only_server_optional, client_or_server_prefers_both, client_or_server, singleplayer_only.")
 
 
 # file helpers
@@ -168,7 +168,7 @@ discord_url = ask("Discord invite URL", optional=True)
 modrinth_id = ask("Modrinth project ID", optional=True)
 curseforge_id = ask("CurseForge project ID", optional=True)
 
-mod_environment = ask("Environment (client/server/both)", default="both")
+mod_environment = ask("Environment (client_only, server_only, dedicated_server_only, client_and_server, server_only_client_optional, client_only_server_optional, client_or_server_prefers_both, client_or_server, singleplayer_only)", default="client_and_server")
 validate_environment(mod_environment)
 
 old_pkg = "com/example/modtemplate"
