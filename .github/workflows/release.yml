@@ -83,4 +83,4 @@ jobs:
           PUB_SIGNING_PASSWORD: ${{ secrets.PUB_SIGNING_PASSWORD }}
           PUB_MAVEN_CENTRAL_USERNAME: ${{ secrets.PUB_MAVEN_CENTRAL_USERNAME }}
           PUB_MAVEN_CENTRAL_PASSWORD: ${{ secrets.PUB_MAVEN_CENTRAL_PASSWORD }}
-        run: ./gradlew publishMods --stacktrace
+        run: ./gradlew publishMods --no-daemon --stacktrace --console=plain
