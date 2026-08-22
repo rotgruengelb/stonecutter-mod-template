@@ -175,7 +175,7 @@ does not need to be set manually.
 |-------------------------------|----------------------------------------------------------------------------|----------|
 | `PUB_DRY_RUN`                 | Set to `true` to simulate publishing without actually uploading            | Variable |
 | `PUB_MODS_ENABLE`             | Set to `true` to enable publishing to Modrinth and CurseForge              | Variable |
-| `PUB_GITHUB_RELEASES`         | Set to `true` to publish GitHub releases                                   | Variable |
+| `PUB_GITHUB_ENABLE`           | Set to `true` to publish GitHub releases                                   | Variable |
 | `PUB_MAVEN_ENABLE`            | Set to `true` to enable Maven publishing                                   | Variable |
 | `PUB_MAVEN_CENTRAL_ENABLE`    | Set to `true` to publish to Maven Central                                  | Variable |
 | `PUB_MAVEN_CENTRAL_SNAPSHOTS` | Set to `true` to also publish snapshot versions to Maven Central           | Variable |
@@ -208,7 +208,7 @@ To set up the CI for publishing:
 2. Under **Secrets**, add any credentials you need (tokens, signing key, Maven credentials).
 3. Under **Variables**, add the toggles and IDs for your platforms. At minimum, you likely want:
    <br/>`PUB_MODS_ENABLE = true`
-   <br/>`PUB_GITHUB_RELEASES = true`
+   <br/>`PUB_GITHUB_ENABLE = true`
    <br/>`PUB_MODRINTH_PROJECT_ID = <your id>`
    <br/>`PUB_CURSEFORGE_PROJECT_ID = <your id>`
 

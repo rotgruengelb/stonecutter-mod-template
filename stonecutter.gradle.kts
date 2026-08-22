@@ -8,7 +8,7 @@ plugins {
 	alias(libs.plugins.devtools.ksp).apply(false)
 	alias(libs.plugins.fletching.table).apply(false)
 	alias(libs.plugins.legacyforge.moddev).apply(false)
-	id("root-platform")
+	id("mod-root")
 }
 
 stonecutter active file(".sc_active_version")

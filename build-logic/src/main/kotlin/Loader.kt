@@ -1,17 +1,12 @@
 @file:Suppress("unused")
 
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
 import me.modmuss50.mpp.platforms.modrinth.ModrinthEnvironment
-import net.peanuuutz.tomlkt.Toml
 import org.gradle.api.NamedDomainObjectContainer
 import java.util.*
-
-private val JSON = Json { prettyPrint = true; encodeDefaults = true; explicitNulls = false }
-private val TOML = Toml { }
 
 sealed class Loader(val id: String) {
 	abstract val modManifestPath: String

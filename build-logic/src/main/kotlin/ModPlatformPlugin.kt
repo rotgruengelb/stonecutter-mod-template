@@ -1,13 +1,7 @@
-@file:Suppress("unused", "DuplicatedCode")
-
 import dev.kikugie.fletching_table.extension.FletchingTableExtension
-import dev.kikugie.stonecutter.build.StonecutterBuildExtension
-import dev.kikugie.stonecutter.controller.StonecutterControllerExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.dsl.RepositoryHandler
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
@@ -15,54 +9,20 @@ import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.gradle.internal.extensions.stdlib.toDefaultLowerCase
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.assign
+import org.gradle.kotlin.dsl.attributes
+import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.expand
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.withType
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import me.modmuss50.mpp.ModPublishExtension
-import me.modmuss50.mpp.ReleaseType
-import java.util.Properties
 import javax.inject.Inject
-
-val Project.sc: StonecutterBuildExtension
-	get() = extensions.getByType<StonecutterBuildExtension>()
-
-fun Project.prop(name: String): String = (project.sc.properties.get<String>(name))
-
-fun Project.env(variable: String): String? {
-	providers.environmentVariable(variable).orNull?.let { return it }
-	return rootProject.file(".env").takeIf { it.exists() }?.let { f ->
-		Properties().apply { f.inputStream().use(::load) }.getProperty(variable)
-	}
-}
-
-fun Project.envTrue(variable: String): Boolean = env(variable)?.toDefaultLowerCase() == "true"
-
-fun releaseTypeFromChannelTag(channelTag: String): ReleaseType =
-	ReleaseType.of(channelTag.substringAfter('-').substringBefore('.').ifEmpty { "stable" })
-
-fun RepositoryHandler.strictMaven(
-	url: String, vararg groups: String, configure: MavenArtifactRepository.() -> Unit = {}
-) = exclusiveContent {
-	forRepository { maven(url) { configure() } }
-	filter { groups.forEach(::includeGroup) }
-}
-
-abstract class GenerateModManifestTask : DefaultTask() {
-	@get:Input
-	abstract val content: Property<String>
-
-	@get:OutputFile
-	abstract val outputFile: RegularFileProperty
-
-	@TaskAction
-	fun generate() {
-		val file = outputFile.get().asFile
-		file.parentFile.mkdirs()
-		file.writeText(content.get())
-	}
-}
 
 abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	override fun apply(project: Project) = with(project) {
@@ -151,6 +111,20 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 
 	private fun Project.registerGenerateManifestTask(ctx: Context) {
 		val manifestOutputDir = layout.buildDirectory.dir("generated/modManifest")
+		abstract class GenerateModManifestTask : DefaultTask() {
+			@get:Input
+			abstract val content: Property<String>
+
+			@get:OutputFile
+			abstract val outputFile: RegularFileProperty
+
+			@TaskAction
+			fun generate() {
+				val file = outputFile.get().asFile
+				file.parentFile.mkdirs()
+				file.writeText(content.get())
+			}
+		}
 		val generateTask = tasks.register<GenerateModManifestTask>("generateModManifest") {
 			content.set(ctx.loader.generateManifest(ctx))
 			outputFile.set(layout.buildDirectory.file("generated/modManifest/${ctx.loader.modManifestPath}"))
@@ -207,56 +181,6 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			into(rootProject.layout.buildDirectory.file("libs/${ctx.basicVersion}"))
 			dependsOn("build")
 			group = "build"
-		}
-	}
-}
-
-class RootPlatformPlugin : Plugin<Project> {
-	override fun apply(project: Project) {
-		with(project) {
-			val stonecutter = extensions.getByType<StonecutterControllerExtension>()
-			val properties = stonecutter.properties
-			val modVersion = properties.get<String>("mod.version")
-			val channelTag = properties.get<String>("mod.channel_tag")
-			val changelogText = file("CHANGELOG.md").takeIf { it.exists() }?.readText() ?: ""
-			val githubToken = providers.environmentVariable("GITHUB_TOKEN")
-
-			extensions.configure<ModPublishExtension>("publishMods") {
-				dryRun = envTrue("PUB_DRY_RUN") || !envTrue("PUB_GITHUB_RELEASES")
-				version = modVersion
-				changelog.set(changelogText)
-				type = releaseTypeFromChannelTag(channelTag)
-				if (envTrue("PUB_GITHUB_RELEASES")) {
-					github {
-						accessToken = githubToken
-						repository = providers.environmentVariable("GITHUB_REPOSITORY")
-						commitish = providers.environmentVariable("GITHUB_SHA").orElse("main")
-						tagName = providers.environmentVariable("GITHUB_REF_NAME")
-						allowEmptyFiles = true
-					}
-				}
-			}
-
-			stonecutter.tasks {
-				order("publishModrinth")
-				order("publishCurseforge")
-			}
-
-			tasks.register("runActiveClient") {
-				group = "stonecutter"
-				description = "Run client of the active Stonecutter version"
-				dependsOn(stonecutter.current!!.project + ":runClient")
-			}
-			tasks.register("runActiveServer") {
-				group = "stonecutter"
-				description = "Run server of the active Stonecutter version"
-				dependsOn(stonecutter.current!!.project + ":runServer")
-			}
-
-			for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publish$version") {
-				group = "publishing"
-				dependsOn(stonecutter.tasks.named("publishMods") { metadata.version == version })
-			}
 		}
 	}
 }

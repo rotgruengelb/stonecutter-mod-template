@@ -67,7 +67,7 @@ jobs:
       - name: Build and publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUB_GITHUB_RELEASES: ${{ vars.PUB_GITHUB_RELEASES }}
+          PUB_GITHUB_ENABLE: ${{ vars.PUB_GITHUB_ENABLE }}
           PUB_DRY_RUN: ${{ vars.PUB_DRY_RUN }}
           PUB_MODS_ENABLE: ${{ vars.PUB_MODS_ENABLE }}
           PUB_MAVEN_ENABLE: ${{ vars.PUB_MAVEN_ENABLE }}

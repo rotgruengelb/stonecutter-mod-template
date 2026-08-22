@@ -65,7 +65,7 @@ fun Project.configureModPublishing(ctx: Context) {
 		val modrinthAccessToken = env("PUB_MODRINTH_TOKEN")
 		val curseforgeAccessToken = env("PUB_CURSEFORGE_TOKEN")
 
-		val githubEnabled = envTrue("PUB_GITHUB_RELEASES")
+		val githubEnabled = envTrue("PUB_GITHUB_ENABLE")
 		if (envTrue("PUB_DRY_RUN") || !envTrue("PUB_MODS_ENABLE")) {
 			dryRun = true
 		}
