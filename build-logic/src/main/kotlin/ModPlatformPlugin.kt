@@ -5,6 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.provider.Property
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
@@ -106,6 +107,9 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 			withJavadocJar()
 			sourceCompatibility = ctx.javaVersion
 			targetCompatibility = ctx.javaVersion
+			toolchain {
+				languageVersion.set(JavaLanguageVersion.of(ctx.javaVersion.majorVersion))
+			}
 		}
 	}
 
@@ -135,12 +139,14 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 	}
 
 	private fun Project.configureProcessResources(ctx: Context) {
+		val javaVersionValue = "JAVA_${ctx.javaVersion.majorVersion}"
+		val excluded = ctx.loader.excludedResources
 		tasks.named<ProcessResources>("processResources") {
 			dependsOn(tasks.named("stonecutterGenerate"), "kspKotlin")
 			filesMatching("*.mixins.json") {
-				expand("java" to "JAVA_${ctx.javaVersion.majorVersion}")
+				expand("java" to javaVersionValue)
 			}
-			exclude(ctx.loader.excludedResources)
+			exclude(excluded)
 		}
 	}
 
