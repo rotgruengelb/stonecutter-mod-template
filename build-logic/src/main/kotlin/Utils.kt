@@ -17,6 +17,10 @@ val Project.sc: StonecutterBuildExtension
 
 fun Project.prop(name: String): String = (project.sc.properties.get<String>(name))
 
+fun Project.propsList(vararg segments: String): List<String> = runCatching {
+	sc.properties.raw(*segments).asList().map { it.toString() }
+}.getOrElse { error("Missing or malformed '${segments.joinToString(".")}' in stonecutter.properties.toml") }
+
 fun Project.env(variable: String): String? {
 	providers.environmentVariable(variable).orNull?.let { return it }
 	return rootProject.file(".env").takeIf { it.exists() }?.let { f ->

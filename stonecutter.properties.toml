@@ -1,22 +1,42 @@
-loomx.loom_version="1.16-SNAPSHOT"
+loomx.loom_version = "1.18-SNAPSHOT"
 
-mod.id = "modtemplate"
-mod.name = "Mod Template"
-mod.group = "com.example"
-mod.version = "0.1.0"
-mod.channel_tag = "-alpha.2"
-mod.description = "Example Description"
-mod.authors = ["AuthorName", "AnotherAuthorName"]
-mod.contributors = ["ContributorName", "AnotherContributorName"]
-mod.inception_year = "2025"
-mod.license.name = "MIT"
-mod.license.url = "https://opensource.org/licenses/MIT"
-mod.license.dist = "repo"
-mod.environment = "client_and_server"
-mod.sources_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
-mod.homepage_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
-mod.issues_url = "https://github.com/rotgruengelb/stonecutter-mod-template/issues"
-mod.discord_url = "https://discord.gg/aunYJB4wz9"
+[mod]
+id = "modtemplate"
+name = "Mod Template"
+group = "com.example"
+version = "0.1.0"
+channel_tag = "-alpha.2"
+description = "Example Description"
+authors = ["AuthorName", "AnotherAuthorName"]
+contributors = ["ContributorName", "AnotherContributorName"]
+inception_year = "2025"
+license.name = "MIT"
+license.url = "https://opensource.org/licenses/MIT"
+license.dist = "repo"
+environment = "client_and_server"
+sources_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
+homepage_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
+issues_url = "https://github.com/rotgruengelb/stonecutter-mod-template/issues"
+discord_url = "https://discord.gg/aunYJB4wz9"
+dev_jvm_args = [
+	"-XX:+IgnoreUnrecognizedVMOptions",
+	"-XX:+UseZGC",
+	"-XX:+HeapDumpOnOutOfMemoryError",
+	"-XX:HeapDumpPath=heapdump.hprof",
+	"-XX:+ShowCodeDetailsInExceptionMessages",
+	"-XX:+UseCompactObjectHeaders",
+	"-XX:+AlwaysPreTouch",
+	"-XX:+UseStringDeduplication",
+	"-Dfile.encoding=UTF-8"
+]
+dev_jvm_args_mixin_debug = [
+	"-Dmixin.env.remapRefMap=true",
+	"-Dmixin.debug.verbose=true",
+	"-Dmixin.debug.verify=true",
+	"-Dmixin.debug.countInjections=true",
+	"-Dmixin.debug=true",
+	"-Dmixin.debug.export=true"
+]
 
 [[mod.pom.developers]]
 id = "authorname"
@@ -46,11 +66,21 @@ deps.fabric-api = "0.128.1+1.21.7"
 deps.modmenu = "15.0.0"
 publish.additionalVersions = ["1.21.6"]
 
+[fabric."1.21.11"]
+deps.minecraft = "1.21.11"
+deps.fabric-api = "0.141.6+1.21.11"
+deps.modmenu = "17.0.1-beta.1"
+
 [fabric."26.1.2"]
 deps.minecraft = "26.1.2"
 deps.fabric-api = "0.146.1+26.1.2"
 deps.modmenu = "18.0.0-alpha.8"
 publish.additionalVersions = ["26.1.1", "26.1"]
+
+[fabric."26.2"]
+deps.minecraft = "26.2"
+deps.fabric-api = "0.161.0+26.2"
+deps.modmenu = "20.0.2"
 
 [forge]
 
