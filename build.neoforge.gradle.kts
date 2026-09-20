@@ -37,16 +37,20 @@ neoForge {
 	}
 
 	runs {
+		val devJvmArgs = propsList("mod", "dev_jvm_args") +
+			propsList("mod", "dev_jvm_args_mixin_debug")
 		register("client") {
 			client()
 			gameDirectory = file("run/")
 			ideName = "NeoForge Client (${stonecutter.current.version})"
 			programArgument("--username=Dev")
+			jvmArguments.addAll(devJvmArgs)
 		}
 		register("server") {
 			server()
 			gameDirectory = file("run/")
 			ideName = "NeoForge Server (${stonecutter.current.version})"
+			jvmArguments.addAll(devJvmArgs)
 		}
 	}
 

@@ -35,20 +35,22 @@ platform {
 
 loom {
 	accessWidenerPath = rootProject.file("src/main/resources/aw/${sc.current.version}.accesswidener")
+	val devJvmArgs = propsList("mod", "dev_jvm_args") +
+		propsList("mod", "dev_jvm_args_mixin_debug")
 	runs.named("client") {
 		client()
-		ideConfigGenerated(true)
-		runDir = "run/"
-		environment = "client"
-		programArgs("--username=Dev")
-		configName = "Fabric Client"
+		generateRunConfig.set(true)
+		runDirectory.set(layout.projectDirectory.dir("run"))
+		programArguments.add("--username=Dev")
+		jvmArguments.addAll(devJvmArgs)
+		displayName.set("Fabric Client")
 	}
 	runs.named("server") {
 		server()
-		ideConfigGenerated(true)
-		runDir = "run/"
-		environment = "server"
-		configName = "Fabric Server"
+		generateRunConfig.set(true)
+		runDirectory.set(layout.projectDirectory.dir("run"))
+		jvmArguments.addAll(devJvmArgs)
+		displayName.set("Fabric Server")
 	}
 }
 

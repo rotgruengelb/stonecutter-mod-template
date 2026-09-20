@@ -34,17 +34,21 @@ legacyForge {
 		rootProject.file("src/main/resources/aw/${sc.current.version}.cfg")
 	)
 
+	val devJvmArgs = propsList("mod", "dev_jvm_args") +
+		propsList("mod", "dev_jvm_args_mixin_debug")
 	runs {
 		register("client") {
 			client()
 			gameDirectory = file("run/")
 			ideName = "Forge Client (${sc.current.version})"
 			programArgument("--username=Dev")
+			jvmArguments.addAll(devJvmArgs)
 		}
 		register("server") {
 			server()
 			gameDirectory = file("run/")
 			ideName = "Forge Server (${sc.current.version})"
+			jvmArguments.addAll(devJvmArgs)
 		}
 	}
 
