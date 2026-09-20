@@ -34,7 +34,7 @@ public class ModTemplate {
 		LOGGER.debug("{}: { version: {}; friendly_name: {} }", MOD_ID, MOD_VERSION, MOD_FRIENDLY_NAME);
 	}
 
-	static Platform xplat() {
+	public static Platform xplat() {
 		return PLATFORM;
 	}
 
@@ -48,7 +48,7 @@ public class ModTemplate {
 		 *///?}
 	}
 
-	private static ResourceLocation id(String path) {
+	public static ResourceLocation id(String path) {
 		//? > 1.19.2 {
 		return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
 		 //?} <= 1.19.2 {
@@ -56,7 +56,7 @@ public class ModTemplate {
 		*///?}
 	}
 
-	private static ResourceLocation id(String namespace, String path) {
+	public static ResourceLocation id(String namespace, String path) {
 		//? > 1.19.2 {
 		return ResourceLocation.fromNamespaceAndPath(namespace, path);
 		 //?} <= 1.19.2 {
