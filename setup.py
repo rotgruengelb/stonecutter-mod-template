@@ -91,8 +91,20 @@ def validate_group(value: str):
 
 
 def validate_environment(value: str):
-    if value.lower() not in ["client_only", "server_only", "dedicated_server_only", "client_and_server", "server_only_client_optional", "client_only_server_optional", "client_or_server_prefers_both", "client_or_server", "singleplayer_only"]:
-        abort("Environment must one of: client_only, server_only, dedicated_server_only, client_and_server, server_only_client_optional, client_only_server_optional, client_or_server_prefers_both, client_or_server, singleplayer_only.")
+    if value.lower() not in [
+        "client_only",
+        "server_only",
+        "dedicated_server_only",
+        "client_and_server",
+        "server_only_client_optional",
+        "client_only_server_optional",
+        "client_or_server_prefers_both",
+        "client_or_server",
+        "singleplayer_only",
+    ]:
+        abort(
+            "Environment must one of: client_only, server_only, dedicated_server_only, client_and_server, server_only_client_optional, client_only_server_optional, client_or_server_prefers_both, client_or_server, singleplayer_only."
+        )
 
 
 # file helpers
@@ -114,13 +126,27 @@ def regex_replace_in_file(path: Path, pattern: str, replacement: str):
     write(path, re.sub(pattern, replacement, read(path)))
 
 
+def has_mod_id(props_text: str, expected_id: str) -> bool:
+    mod_section = re.search(r"(?ms)^\[mod\]\s*\n(.*?)(?=^\[|\Z)", props_text)
+    if not mod_section:
+        return False
+    return (
+        re.search(
+            rf'^id\s*=\s*"{re.escape(expected_id)}"\s*$',
+            mod_section.group(1),
+            re.MULTILINE,
+        )
+        is not None
+    )
+
+
 ROOT = Path(__file__).parent.resolve()
 PROPS_FILE = ROOT / "stonecutter.properties.toml"
 
 if not PROPS_FILE.exists():
     abort("Run this script from the root of the stonecutter-mod-template repository.")
 
-if 'mod.id = "modtemplate"' not in read(PROPS_FILE):
+if not has_mod_id(read(PROPS_FILE), "modtemplate"):
     warn("stonecutter.properties.toml no longer contains the default mod.id.")
     confirm = ask(
         "Setup may have already been run. Continue anyway? [y/N]", default="N"
@@ -168,7 +194,10 @@ discord_url = ask("Discord invite URL", optional=True)
 modrinth_id = ask("Modrinth project ID", optional=True)
 curseforge_id = ask("CurseForge project ID", optional=True)
 
-mod_environment = ask("Environment (client_only, server_only, dedicated_server_only, client_and_server, server_only_client_optional, client_only_server_optional, client_or_server_prefers_both, client_or_server, singleplayer_only)", default="client_and_server")
+mod_environment = ask(
+    "Environment (client_only, server_only, dedicated_server_only, client_and_server, server_only_client_optional, client_only_server_optional, client_or_server_prefers_both, client_or_server, singleplayer_only)",
+    default="client_and_server",
+)
 validate_environment(mod_environment)
 
 old_pkg = "com/example/modtemplate"
@@ -204,7 +233,13 @@ for line in props_text.splitlines():
     stripped = line.strip()
     if stripped.startswith("loomx."):
         loomx_lines.append(stripped)
-    elif stripped and not stripped.startswith("#") and "=" in stripped and not stripped.startswith("mod.") and not stripped.startswith("[["):
+    elif (
+        stripped
+        and not stripped.startswith("#")
+        and "=" in stripped
+        and not stripped.startswith("mod.")
+        and not stripped.startswith("[[")
+    ):
         # stop at first non-loomx, non-comment content that looks like a key=value
         break
 
@@ -218,27 +253,36 @@ pom_devs = "\n".join(
     for a in authors
 )
 
+dev_jvm_args_block = ""
+dev_args_start = props_text.find("dev_jvm_args =")
+if dev_args_start != -1:
+    pom_start = props_text.find("[[mod.pom.developers]]", dev_args_start)
+    if pom_start != -1:
+        dev_jvm_args_block = props_text[dev_args_start:pom_start].strip()
+
 loomx_block = ("\n".join(loomx_lines) + "\n\n") if loomx_lines else ""
 
 new_props = f"""\
 {loomx_block}
-mod.id = "{mod_id}"
-mod.name = "{mod_name}"
-mod.group = "{mod_group}"
-mod.version = "{mod_version}"
-mod.channel_tag = "{channel_tag}"
-mod.description = "{description}"
-mod.authors = {to_toml_array(authors)}
-mod.contributors = {to_toml_array(contributors)}
-mod.inception_year = "{datetime.now().year}"
-mod.license.name = "{license_name}"
-mod.license.url = "{license_url}"
-mod.license.dist = "repo"
-mod.sources_url = "{sources_url}"
-mod.homepage_url = "{homepage_url}"
-mod.issues_url = "{issues_url}"
-mod.discord_url = "{discord_url}"
-mod.environment = "{mod_environment}"
+[mod]
+id = "{mod_id}"
+name = "{mod_name}"
+group = "{mod_group}"
+version = "{mod_version}"
+channel_tag = "{channel_tag}"
+description = "{description}"
+authors = {to_toml_array(authors)}
+contributors = {to_toml_array(contributors)}
+inception_year = "{datetime.now().year}"
+license.name = "{license_name}"
+license.url = "{license_url}"
+license.dist = "repo"
+sources_url = "{sources_url}"
+homepage_url = "{homepage_url}"
+issues_url = "{issues_url}"
+discord_url = "{discord_url}"
+environment = "{mod_environment}"
+{dev_jvm_args_block}
 {pom_devs}
 
 {versions_section}"""
