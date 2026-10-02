@@ -26,9 +26,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME#v}"
-          VERSION=$(grep '^mod\.version' stonecutter.properties.toml | cut -d'"' -f2)
-          CHANNEL_TAG=$(grep '^mod\.channel_tag' stonecutter.properties.toml | cut -d'"' -f2)
+          read -r VERSION CHANNEL_TAG < <(python3 -c '
+          import tomllib
+
+          with open("stonecutter.properties.toml", "rb") as f:
+              mod = tomllib.load(f).get("mod", {})
+
+          print(mod.get("version", ""), mod.get("channel_tag", ""))
+          ')
           FULL_VERSION="${VERSION}${CHANNEL_TAG}"
+
+          if [[ -z "$FULL_VERSION" ]]; then
+            echo "::error::Could not read [mod].version from stonecutter.properties.toml."
+            exit 1
+          fi
 
           echo "Validating tag '$TAG' against version '$FULL_VERSION'..."
           if [[ "$TAG" != "$FULL_VERSION" ]]; then
