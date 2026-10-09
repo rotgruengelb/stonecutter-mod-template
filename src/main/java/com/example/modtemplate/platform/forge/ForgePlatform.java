@@ -20,7 +20,7 @@ public class ForgePlatform implements Platform {
 
 	@Override
 	public String mcVersion() {
-		return "";
+		return FMLLoader.versionInfo().mcVersion();
 	}
 
 	@Override

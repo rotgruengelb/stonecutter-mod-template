@@ -53,7 +53,7 @@ loom {
 
 fabricApi {
 	configureDataGeneration {
-		outputDirectory = file("${rootDir}/versions/datagen/${sc.current.version.split("-")[0]}/src/main/generated")
+		outputDirectory = file("${rootDir}/versions/datagen/${sc.current.version}/src/main/generated")
 		client = true
 	}
 }
