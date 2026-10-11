@@ -17,7 +17,7 @@ platform {
 			forgeLikeVersionRange = prop("deps.minecraft")
 		}
 		required("forge") {
-			forgeLikeVersionRange.set("[1,)")
+			forgeLikeVersionRange.set("[${prop("deps.forge")},)")
 		}
 	}
 }
@@ -77,7 +77,7 @@ dependencies {
 sourceSets {
 	main {
 		resources.srcDir(
-			"${rootDir}/versions/datagen/${sc.current.version.split("-")[0]}/src/main/generated"
+			"${rootDir}/versions/datagen/${sc.current.version}/src/main/generated"
 		)
 	}
 }

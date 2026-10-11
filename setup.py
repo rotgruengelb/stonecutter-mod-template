@@ -201,7 +201,7 @@ mod_environment = ask(
 validate_environment(mod_environment)
 
 old_pkg = "com/example/modtemplate"
-new_pkg = mod_group.replace(".", "/") + f"/{mod_id}"
+new_pkg = f"{mod_group.replace(".", "/")}/{mod_id}"
 old_java_pkg = "com.example.modtemplate"
 new_java_pkg = f"{mod_group}.{mod_id}"
 
@@ -318,7 +318,7 @@ new_java_root = ROOT / "src/main/java" / new_pkg
 if old_pkg != new_pkg and old_java_root.exists():
     info(f"Moving Java sources: {old_pkg} -> {new_pkg} ...")
     new_java_root.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(old_java_root, new_java_root)
+    shutil.copytree(old_java_root, new_java_root, dirs_exist_ok=True)
 
     for java_file in new_java_root.rglob("*.java"):
         replace_in_file(java_file, old_java_pkg, new_java_pkg)
@@ -327,6 +327,11 @@ if old_pkg != new_pkg and old_java_root.exists():
     for empty_dir in [ROOT / "src/main/java/com/example", ROOT / "src/main/java/com"]:
         if empty_dir.exists() and not any(empty_dir.iterdir()):
             empty_dir.rmdir()
+
+datagen_root = ROOT / "versions" / "datagen"
+if datagen_root.exists():
+    info("Removing stale generated datagen output ...")
+    shutil.rmtree(datagen_root)
 
 # .env
 

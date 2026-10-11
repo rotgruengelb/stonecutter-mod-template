@@ -100,6 +100,7 @@ abstract class ModPlatformPlugin @Inject constructor() : Plugin<Project> {
 		configureModPublishing(ctx)
 
 		if (envTrue("PUB_MAVEN_ENABLE")) {
+			apply(plugin = "com.vanniktech.maven.publish")
 			configureMavenPublishing(ctx)
 		}
 	}

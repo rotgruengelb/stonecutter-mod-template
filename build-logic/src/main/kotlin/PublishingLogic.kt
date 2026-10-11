@@ -36,8 +36,7 @@ fun Project.configureMavenPublishing(ctx: Context) {
 				}
 			}
 			developers {
-				project.sc.properties.raw("mod.pom.developers").asList().forEach { devNode ->
-
+				project.sc.properties.raw("mod", "pom", "developers").asList().forEach { devNode ->
 					val dev = devNode.asMap()
 					developer {
 						id.set(dev["id"]?.toString())
