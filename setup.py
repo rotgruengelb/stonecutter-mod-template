@@ -249,7 +249,7 @@ if not match:
 versions_section = props_text[match.start() :]
 
 pom_devs = "\n".join(
-    f'[[mod.pom.developers]]\nid = "{a.lower().replace(" ", "")}"\nname = "{a}"\nurl = "https://github.com/{a.lower().replace(" ", "")}"'
+    f'[[mod.pom.developers]]\nid = "{a.lower().replace(" ", "")}"\nname = "{a}"\nurl = "https://github.com/ghost"'
     for a in authors
 )
 

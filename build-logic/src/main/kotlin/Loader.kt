@@ -130,7 +130,7 @@ sealed class Loader(val id: String) {
 
 	object Forge : ForgeLike("forge") {
 		override val modManifestPath = "META-INF/mods.toml"
-		override val excludedResources = super.excludedResources + "META-INF/neoforge.mods.toml" + "pack.mcmeta"
+		override val excludedResources = super.excludedResources + "META-INF/neoforge.mods.toml"
 		val mixinConfigAttribute = "MixinConfigs"
 	}
 
