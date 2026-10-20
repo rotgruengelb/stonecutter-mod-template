@@ -10,8 +10,8 @@ class ModRootPlugin : Plugin<Project> {
 		with(project) {
 			val stonecutter = extensions.getByType<StonecutterControllerExtension>()
 			val properties = stonecutter.properties
-			val modVersion = properties.get<String>("mod.version")
-			val channelTag = properties.get<String>("mod.channel_tag")
+			val modVersion = properties.getAs<String>("mod.version")
+			val channelTag = properties.getAs<String>("mod.channel_tag")
 			val changelogText = file("CHANGELOG.md").takeIf { it.exists() }?.readText() ?: ""
 			val githubToken = providers.environmentVariable("GITHUB_TOKEN")
 
@@ -39,17 +39,17 @@ class ModRootPlugin : Plugin<Project> {
 			tasks.register("runActiveClient") {
 				group = "stonecutter"
 				description = "Run client of the active Stonecutter version"
-				dependsOn(stonecutter.current!!.project + ":runClient")
+				dependsOn(stonecutter.active!!.project + ":runClient")
 			}
 			tasks.register("runActiveServer") {
 				group = "stonecutter"
 				description = "Run server of the active Stonecutter version"
-				dependsOn(stonecutter.current!!.project + ":runServer")
+				dependsOn(stonecutter.active!!.project + ":runServer")
 			}
 
 			for (version in stonecutter.versions.map { it.version }.distinct()) tasks.register("publish$version") {
 				group = "publishing"
-				dependsOn(stonecutter.tasks.named("publishMods") { metadata.version == version })
+				dependsOn(stonecutter.tasks.names("publishMods") { metadata.version == version })
 			}
 		}
 	}

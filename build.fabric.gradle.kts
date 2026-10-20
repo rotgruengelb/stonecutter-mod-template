@@ -75,7 +75,7 @@ dependencies {
 	if (sc.current.parsed < "26") {
 		mappings(loom.layered {
 			officialMojangMappings()
-			if (hasProperty("deps.parchment"))
+			if (sc.properties.contains("deps.parchment"))
 				parchment("org.parchmentmc.data:parchment-${prop("deps.parchment")}@zip")
 		})
 	}

@@ -1,5 +1,3 @@
-loomx.loom_version = "1.18-SNAPSHOT"
-
 [mod]
 id = "modtemplate"
 name = "Mod Template"

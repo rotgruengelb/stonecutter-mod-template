@@ -1,5 +1,4 @@
 plugins {
-	alias(libs.plugins.stonecutter)
 	alias(libs.plugins.mod.publish.plugin)
 	alias(libs.plugins.loom.back.compat).apply(false)
 	alias(libs.plugins.neoforged.moddev).apply(false)
@@ -15,10 +14,10 @@ stonecutter active file(".sc_active_version")
 
 stonecutter parameters {
 	constants.match(current.project.substringAfterLast('-'), "fabric", "neoforge", "forge")
-	swaps["mod_version"] = "\"${properties.get<String>("mod.version")}\";"
-	swaps["mod_id"] = "\"${properties.get<String>("mod.id")}\";"
-	swaps["mod_name"] = "\"${properties.get<String>("mod.name")}\";"
-	swaps["mod_group"] = "\"${properties.get<String>("mod.group")}\";"
+	swaps["mod_version"] = "\"${properties.getAs<String>("mod.version")}\";"
+	swaps["mod_id"] = "\"${properties.getAs<String>("mod.id")}\";"
+	swaps["mod_name"] = "\"${properties.getAs<String>("mod.name")}\";"
+	swaps["mod_group"] = "\"${properties.getAs<String>("mod.group")}\";"
 	swaps["minecraft"] = "\"${current.version}\";"
-	constants["release"] = properties.get<String>("mod.id") != "modtemplate"
+	constants["release"] = properties.getAs<String>("mod.id") != "modtemplate"
 }
