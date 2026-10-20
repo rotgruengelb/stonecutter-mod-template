@@ -227,22 +227,6 @@ info("Updating stonecutter.properties.toml ...")
 
 props_text = read(PROPS_FILE)
 
-# Preserve loomx.loom_version (and any other top-level loomx.* lines) if present
-loomx_lines = []
-for line in props_text.splitlines():
-    stripped = line.strip()
-    if stripped.startswith("loomx."):
-        loomx_lines.append(stripped)
-    elif (
-        stripped
-        and not stripped.startswith("#")
-        and "=" in stripped
-        and not stripped.startswith("mod.")
-        and not stripped.startswith("[[")
-    ):
-        # stop at first non-loomx, non-comment content that looks like a key=value
-        break
-
 match = re.search(r"^\[fabric\]", props_text, re.MULTILINE)
 if not match:
     abort("Could not find [fabric] section in stonecutter.properties.toml.")
@@ -260,10 +244,7 @@ if dev_args_start != -1:
     if pom_start != -1:
         dev_jvm_args_block = props_text[dev_args_start:pom_start].strip()
 
-loomx_block = ("\n".join(loomx_lines) + "\n\n") if loomx_lines else ""
-
 new_props = f"""\
-{loomx_block}
 [mod]
 id = "{mod_id}"
 name = "{mod_name}"

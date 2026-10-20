@@ -15,7 +15,7 @@ import java.util.*
 val Project.sc: StonecutterBuildExtension
 	get() = extensions.getByType<StonecutterBuildExtension>()
 
-fun Project.prop(name: String): String = (project.sc.properties.get<String>(name))
+fun Project.prop(name: String): String = (project.sc.properties.getAs<String>(name))
 
 fun Project.propsList(vararg segments: String): List<String> = runCatching {
 	sc.properties.raw(*segments).asList().map { it.toString() }
