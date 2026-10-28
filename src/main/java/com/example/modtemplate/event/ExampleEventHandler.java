@@ -11,7 +11,7 @@ public class ExampleEventHandler {
 		//? if > 1.19.2 {
 		// MinecraftServer.pvp is private... only here to test ATs/AWs
 		//? if < 26.1.2
-		boolean pvp = Objects.requireNonNull(player.getServer()).pvp;
+		boolean pvp = Objects.requireNonNull(player.getServer()).isPvpAllowed();
 		//? if >= 26.1.2
 		//boolean pvp = Objects.requireNonNull(player.level()).isPvpAllowed();
 		if (pvp) {
