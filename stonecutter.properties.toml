@@ -17,23 +17,23 @@ homepage_url = "https://github.com/rotgruengelb/stonecutter-mod-template"
 issues_url = "https://github.com/rotgruengelb/stonecutter-mod-template/issues"
 discord_url = "https://discord.gg/aunYJB4wz9"
 dev_jvm_args = [
-	"-XX:+IgnoreUnrecognizedVMOptions",
-	"-XX:+UseZGC",
-	"-XX:+HeapDumpOnOutOfMemoryError",
-	"-XX:HeapDumpPath=heapdump.hprof",
-	"-XX:+ShowCodeDetailsInExceptionMessages",
-	"-XX:+UseCompactObjectHeaders",
-	"-XX:+AlwaysPreTouch",
-	"-XX:+UseStringDeduplication",
-	"-Dfile.encoding=UTF-8"
+    "-XX:+IgnoreUnrecognizedVMOptions",
+    "-XX:+UseZGC",
+    "-XX:+HeapDumpOnOutOfMemoryError",
+    "-XX:HeapDumpPath=heapdump.hprof",
+    "-XX:+ShowCodeDetailsInExceptionMessages",
+    "-XX:+UseCompactObjectHeaders",
+    "-XX:+AlwaysPreTouch",
+    "-XX:+UseStringDeduplication",
+    "-Dfile.encoding=UTF-8"
 ]
 dev_jvm_args_mixin_debug = [
-	"-Dmixin.env.remapRefMap=true",
-	"-Dmixin.debug.verbose=true",
-	"-Dmixin.debug.verify=true",
-	"-Dmixin.debug.countInjections=true",
-	"-Dmixin.debug=true",
-	"-Dmixin.debug.export=true"
+    "-Dmixin.env.remapRefMap=true",
+    "-Dmixin.debug.verbose=true",
+    "-Dmixin.debug.verify=true",
+    "-Dmixin.debug.countInjections=true",
+    "-Dmixin.debug=true",
+    "-Dmixin.debug.export=true"
 ]
 
 [[mod.pom.developers]]
@@ -85,6 +85,10 @@ deps.modmenu = "20.0.2"
 [forge."1.19.2"]
 deps.minecraft = "1.19.2"
 deps.forge = "43.5.2"
+
+[forge."1.20.1"]
+deps.minecraft = "1.20.1"
+deps.forge = "47.1.0"
 
 [neoforge]
 
