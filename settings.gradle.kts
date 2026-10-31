@@ -1,36 +1,36 @@
 pluginManagement {
-	repositories {
-		mavenLocal()
-		mavenCentral()
-		gradlePluginPortal()
-		maven("https://maven.fabricmc.net/") { name = "Fabric" }
-		maven("https://maven.neoforged.net/releases/") { name = "NeoForged" }
-		maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
-		maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
-		maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
-	}
-	includeBuild("build-logic")
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        gradlePluginPortal()
+        maven("https://maven.fabricmc.net/") { name = "Fabric" }
+        maven("https://maven.neoforged.net/releases/") { name = "NeoForged" }
+        maven("https://maven.kikugie.dev/snapshots") { name = "KikuGie Snapshots" }
+        maven("https://maven.kikugie.dev/releases") { name = "KikuGie Releases" }
+        maven("https://maven.parchmentmc.org") { name = "ParchmentMC" }
+    }
+    includeBuild("build-logic")
 }
 
 plugins {
-	id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-	// Keep in sync with the `stonecutter` version in gradle/libs.versions.toml!
-	id("dev.kikugie.stonecutter") version "0.10-beta.1"
-	id("dev.kikugie.loom-back-compat") version "0.4.1"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+    // Keep in sync with the `stonecutter` version in gradle/libs.versions.toml!
+    id("dev.kikugie.stonecutter") version "0.10-beta.1"
+    id("dev.kikugie.loom-back-compat") version "0.4.1"
 }
 
 stonecutter {
-	create(rootProject) {
-		fun match(version: String, vararg loaders: String) =
-			loaders.forEach { version("$version-$it", version).buildscript = "build.$it.gradle.kts" }
+    create(rootProject) {
+        fun match(version: String, vararg loaders: String) =
+            loaders.forEach { version("$version-$it", version).buildscript = "build.$it.gradle.kts" }
 
-		match("26.1.2", "fabric", "neoforge")
-		match("1.21.7", "fabric", "neoforge")
-		match("1.21.1", "fabric", "neoforge")
-		match("1.20.1", "fabric", "forge")
-		match("1.19.2", "fabric", "forge")
+        match("26.1.2", "fabric", "neoforge")
+        match("1.21.7", "fabric", "neoforge")
+        match("1.21.1", "fabric", "neoforge")
+        match("1.20.1", "forge")
+        match("1.19.2", "fabric", "forge")
 
-		vcsVersion = "1.21.7-fabric"
-	}
+        vcsVersion = "1.21.7-fabric"
+    }
 }
 
